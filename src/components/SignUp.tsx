@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import { FaGoogle as GoogleIcon } from "react-icons/fa";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
+import { UserCredential } from "firebase/auth";
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +18,12 @@ const SignUp: React.FC = () => {
     try {
       await signUpWithEmail(email, password);
       toast.success("Signed up successfully!");
+      Swal.fire({
+        title: `Logged in, ${email.split("@")[0]}`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       navigate("/");
     } catch (error) {
       toast.error("Failed to sign up. Please try again.");
@@ -24,8 +32,15 @@ const SignUp: React.FC = () => {
 
   const handleGoogleSignUp = async () => {
     try {
-      await loginWithGoogle();
+      const result: UserCredential = await loginWithGoogle();
+      const name = result.user.displayName || result.user.email!.split("@")[0];
       toast.success("Signed up with Google successfully!");
+      Swal.fire({
+        title: `Logged in, ${name}`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       navigate("/");
     } catch (error) {
       toast.error("Failed to sign up with Google.");

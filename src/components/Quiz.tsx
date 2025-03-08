@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Question } from "../types";
 import { motion } from "framer-motion";
-import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +10,8 @@ interface QuizProps {
   onComplete: (score: number, time: string) => void;
   initialProgress: number;
   initialElapsed: number;
-  onQuit: (elapsed: number) => void;
+  initialScore: number; // New prop to persist score
+  onQuit: (elapsed: number, score: number, completed: number) => void;
 }
 
 const Quiz: React.FC<QuizProps> = ({
@@ -20,10 +20,11 @@ const Quiz: React.FC<QuizProps> = ({
   onComplete,
   initialProgress,
   initialElapsed,
+  initialScore,
   onQuit,
 }) => {
   const [currentQuestion, setCurrentQuestion] = useState(initialProgress);
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(initialScore); // Use initialScore instead of resetting to 0
   const [startTime] = useState(Date.now() - initialElapsed * 1000);
   const [elapsedTime, setElapsedTime] = useState(initialElapsed);
   const [buttonsEnabled, setButtonsEnabled] = useState(true);
@@ -41,28 +42,32 @@ const Quiz: React.FC<QuizProps> = ({
     setButtonsEnabled(false);
 
     const question = questions[currentQuestion];
-    if (selected === question.correct) {
-      const points = question.difficulty <= 10 ? 10 : question.difficulty <= 20 ? 20 : 30;
-      setScore(score + points);
-      toast.success(`Correct! +${points} points`);
-    } else {
-      toast.error(`Wrong! Correct answer: ${question.correct}`);
-    }
+    const isCorrect = selected === question.correct;
+    const points = isCorrect ? (question.difficulty <= 10 ? 10 : question.difficulty <= 20 ? 20 : 30) : 0;
 
-    const nextQuestion = currentQuestion + 1;
-    if (nextQuestion >= questions.length) {
-      const minutes = Math.floor(elapsedTime / 60);
-      const seconds = elapsedTime % 60;
-      onComplete(score, `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
-    } else {
-      setTimeout(() => {
+    Swal.fire({
+      title: isCorrect ? "Correct!" : "Incorrect",
+      text: isCorrect
+        ? `You earned ${points} points!`
+        : `The correct answer was: ${question.correct}`,
+      icon: isCorrect ? "success" : "error",
+      confirmButtonText: "Continue",
+    }).then(() => {
+      if (isCorrect) setScore(score + points);
+
+      const nextQuestion = currentQuestion + 1;
+      if (nextQuestion >= questions.length) {
+        const minutes = Math.floor(elapsedTime / 60);
+        const seconds = elapsedTime % 60;
+        onComplete(score + points, `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
+      } else {
         setCurrentQuestion(nextQuestion);
         setButtonsEnabled(true);
-      }, 1000);
-    }
+      }
+    });
   };
 
-  const handleQuit = () => {
+  const handleQuit = (isBackToHome = false) => {
     Swal.fire({
       title: "Quit Quiz?",
       text: "Your progress will be saved.",
@@ -73,10 +78,14 @@ const Quiz: React.FC<QuizProps> = ({
       confirmButtonText: "Yes, quit",
     }).then((result) => {
       if (result.isConfirmed) {
-        onQuit(elapsedTime);
+        onQuit(elapsedTime, score, currentQuestion);
         navigate("/");
       }
     });
+  };
+
+  const handleBackToHome = () => {
+    handleQuit(true);
   };
 
   if (currentQuestion >= questions.length) return null;
@@ -90,7 +99,7 @@ const Quiz: React.FC<QuizProps> = ({
       <div className="flex justify-between items-center mb-4">
         <motion.button
           whileHover={{ scale: 1.05 }}
-          onClick={() => navigate("/")}
+          onClick={handleBackToHome}
           className="bg-gray-500 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition"
         >
           Back to Home
@@ -132,7 +141,7 @@ const Quiz: React.FC<QuizProps> = ({
       </div>
       <motion.button
         whileHover={{ scale: 1.05 }}
-        onClick={handleQuit}
+        onClick={() => handleQuit(false)}
         className="mt-6 w-full bg-yellow-400 text-white py-3 rounded-lg hover:bg-yellow-500 transition"
       >
         Quit

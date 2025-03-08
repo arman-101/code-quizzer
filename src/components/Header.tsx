@@ -1,7 +1,8 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Add Link for navigation
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -9,6 +10,12 @@ const Header: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
+    Swal.fire({
+      title: "Logged out",
+      icon: "info",
+      timer: 1500,
+      showConfirmButton: false,
+    });
     navigate("/sign-in");
   };
 
@@ -16,14 +23,15 @@ const Header: React.FC = () => {
     <motion.header
       initial={{ y: -50 }}
       animate={{ y: 0 }}
-      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center shadow-lg"
+      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-center items-center shadow-lg relative"
     >
-      <Link to="/" className="text-2xl font-bold hover:text-yellow-300 transition">
-        Code Quizzer
+      <Link to="/" className="flex items-center space-x-2"> {/* Link to home page */}
+        <img src="/icons8-done-bubbles-120.png" alt="Favicon" className="w-8 h-8" />
+        <span className="text-2xl font-bold hover:text-yellow-300 transition">Code Quizzer</span>
       </Link>
       {user && (
-        <div className="flex items-center space-x-4">
-          <span className="text-sm">{user.displayName || user.email}</span>
+        <div className="absolute right-4 flex items-center space-x-4">
+          <span className="text-base font-medium">{user.displayName || user.email}</span>
           <motion.button
             whileHover={{ scale: 1.05 }}
             onClick={handleLogout}

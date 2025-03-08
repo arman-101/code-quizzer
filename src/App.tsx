@@ -29,12 +29,13 @@ const App: React.FC = () => {
   }, [user]);
 
   const loadUserData = async () => {
-    const userDoc = doc(db, "users", user!.uid);
+    if (!user) return;
+    const userDoc = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDoc);
     if (docSnap.exists()) {
       setUserProgress(docSnap.data() as UserProgress);
     } else {
-      const initialProgress = topics.reduce(
+      const initialProgress: UserProgress = topics.reduce(
         (acc, topic) => ({
           ...acc,
           [topic.name]: { completed: 0, time: null, elapsed: 0 },
@@ -50,7 +51,7 @@ const App: React.FC = () => {
     const highScoresCol = collection(db, "highScores");
     const highScoresSnap = await getDocs(highScoresCol);
     const scores = highScoresSnap.docs.map((doc) => doc.data() as HighScore);
-    setHighScores(scores.sort((a, b) => b.score - a.score).slice(0, 5));
+    setHighScores(scores);
   };
 
   const handleTopicSelect = (topic: string) => {
@@ -58,38 +59,50 @@ const App: React.FC = () => {
   };
 
   const handleQuizComplete = async (score: number, time: string) => {
+    if (!user || !currentTopic) return;
     const updatedProgress = {
       ...userProgress,
-      [currentTopic!]: {
+      [currentTopic]: {
         completed: topics.find((t) => t.name === currentTopic)!.questions.length,
         time,
         elapsed: 0,
       },
     };
     setUserProgress(updatedProgress);
-    await setDoc(doc(db, "users", user!.uid), updatedProgress);
+    await setDoc(doc(db, "users", user.uid), updatedProgress);
 
-    const highScoreDoc = doc(db, "highScores", `${user!.uid}_${currentTopic}`);
-    await setDoc(highScoreDoc, { name: user!.displayName || user!.email, score, topic: currentTopic });
-    loadHighScores();
+    const highScoreDoc = doc(db, "highScores", `${user.uid}_${currentTopic}`);
+    await setDoc(highScoreDoc, { name: user.displayName || user.email, score, topic: currentTopic });
+
+    await loadUserData();
+    await loadHighScores();
     setCurrentTopic(null);
   };
 
-  const handleQuizQuit = async (elapsed: number) => {
+  const handleQuizQuit = async (elapsed: number, score: number, completed: number) => {
+    if (!user || !currentTopic) return;
     const updatedProgress = {
       ...userProgress,
-      [currentTopic!]: {
-        ...userProgress[currentTopic!],
+      [currentTopic]: {
+        completed,
+        time: null,
         elapsed,
       },
     };
     setUserProgress(updatedProgress);
-    await setDoc(doc(db, "users", user!.uid), updatedProgress);
+    await setDoc(doc(db, "users", user.uid), updatedProgress);
+
+    const highScoreDoc = doc(db, "highScores", `${user.uid}_${currentTopic}`);
+    await setDoc(highScoreDoc, { name: user.displayName || user.email, score, topic: currentTopic });
+
+    await loadUserData();
+    await loadHighScores();
     setCurrentTopic(null);
   };
 
   const handleResetProgress = async () => {
-    Swal.fire({
+    if (!user) return;
+    const result = await Swal.fire({
       title: "Reset Progress?",
       text: "All your scores and progress will be reset!",
       icon: "warning",
@@ -97,26 +110,38 @@ const App: React.FC = () => {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, reset",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const initialProgress = topics.reduce(
-          (acc, topic) => ({
-            ...acc,
-            [topic.name]: { completed: 0, time: null, elapsed: 0 },
-          }),
-          {}
-        );
-        setUserProgress(initialProgress);
-        await setDoc(doc(db, "users", user!.uid), initialProgress);
-        const highScoresCol = collection(db, "highScores");
-        const highScoresSnap = await getDocs(highScoresCol);
-        highScoresSnap.docs
-          .filter((doc) => doc.data().name === (user!.displayName || user!.email))
-          .forEach((doc) => setDoc(doc.ref, { ...doc.data(), score: 0 }));
-        loadHighScores();
-        Swal.fire("Reset!", "Your progress has been reset.", "success");
-      }
     });
+
+    if (result.isConfirmed) {
+      const initialProgress: UserProgress = topics.reduce(
+        (acc, topic) => ({
+          ...acc,
+          [topic.name]: { completed: 0, time: null, elapsed: 0 },
+        }),
+        {}
+      );
+      setUserProgress(initialProgress);
+      await setDoc(doc(db, "users", user.uid), initialProgress);
+      const highScoresCol = collection(db, "highScores");
+      const highScoresSnap = await getDocs(highScoresCol);
+      const userHighScores = highScoresSnap.docs.filter(
+        (doc) => doc.data().name === (user.displayName || user.email)
+      );
+      await Promise.all(
+        userHighScores.map((doc) => setDoc(doc.ref, { ...doc.data(), score: 0 }))
+      );
+
+      await loadUserData();
+      await loadHighScores();
+      Swal.fire("Reset!", "Your progress has been reset.", "success");
+    }
+  };
+
+  const getInitialScore = (topic: string) => {
+    const highScore = highScores.find(
+      (hs) => hs.topic === topic && hs.name === (user?.displayName || user?.email)
+    );
+    return highScore ? highScore.score : 0;
   };
 
   return (
@@ -131,11 +156,11 @@ const App: React.FC = () => {
             element={
               user ? (
                 <>
-                  <nav className="p-4 flex justify-center space-x-6">
+                  <nav className="p-4 pt-8 flex justify-center space-x-6">
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Link
                         to="/"
-                        className="bg-indigo-500 text-white px-4 py-2 rounded-full hover:bg-indigo-600 transition shadow-md"
+                        className="bg-indigo-500 text-white px-6 py-3 rounded-full hover:bg-indigo-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
                       >
                         Home
                       </Link>
@@ -143,7 +168,7 @@ const App: React.FC = () => {
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Link
                         to="/leaderboard"
-                        className="bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition shadow-md"
+                        className="bg-purple-500 text-white px-6 py-3 rounded-full hover:bg-purple-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
                       >
                         Leaderboard
                       </Link>
@@ -151,7 +176,7 @@ const App: React.FC = () => {
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Link
                         to="/faq"
-                        className="bg-teal-500 text-white px-4 py-2 rounded-full hover:bg-teal-600 transition shadow-md"
+                        className="bg-teal-500 text-white px-6 py-3 rounded-full hover:bg-teal-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
                       >
                         FAQ
                       </Link>
@@ -164,6 +189,7 @@ const App: React.FC = () => {
                       onComplete={handleQuizComplete}
                       initialProgress={userProgress[currentTopic]?.completed || 0}
                       initialElapsed={userProgress[currentTopic]?.elapsed || 0}
+                      initialScore={getInitialScore(currentTopic)}
                       onQuit={handleQuizQuit}
                     />
                   ) : (
@@ -182,7 +208,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/leaderboard"
-            element={user ? <Leaderboard highScores={highScores} /> : <Navigate to="/sign-in" />}
+            element={user ? <Leaderboard highScores={highScores} userProgress={userProgress} /> : <Navigate to="/sign-in" />}
           />
           <Route path="/faq" element={user ? <FAQ /> : <Navigate to="/sign-in" />} />
           <Route path="*" element={<Navigate to="/sign-in" />} />

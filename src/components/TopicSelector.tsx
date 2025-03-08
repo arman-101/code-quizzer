@@ -17,7 +17,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
 }) => {
   const totalScore = Object.entries(userProgress).reduce((sum, [topicName, progress]) => {
     const topic = topics.find((t) => t.name === topicName);
-    if (!topic) return sum; // If topic not found, skip it
+    if (!topic) return sum;
     const topicScore = topic.questions
       .slice(0, progress.completed)
       .reduce((s, q) => s + (q.difficulty <= 10 ? 10 : q.difficulty <= 20 ? 20 : 30), 0);
@@ -65,9 +65,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       <motion.button
         whileHover={{ scale: 1.05 }}
         onClick={onResetProgress}
-        className="mt-6 w-full max-w-xs mx-auto block bg-red-500 text-white py-2 rounded-full hover:bg-red-600 transition"
+        className="mt-6 w-full max-w-[12rem] mx-auto block bg-red-500 text-white py-2 rounded-full hover:bg-red-600 transition" // Increased from max-w-[10rem] to max-w-[12rem]
       >
-        Reset Progress
+        Reset My Progress
       </motion.button>
     </div>
   );
