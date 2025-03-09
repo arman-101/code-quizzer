@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { db } from "./firebase";
 import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
-import { BrowserRouter as Router, Route, Routes, Link, Navigate } from "react-router-dom";
+import { Route, Routes, Link, Navigate, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import TopicSelector from "./components/TopicSelector";
 import Quiz from "./components/Quiz";
@@ -20,6 +20,10 @@ const App: React.FC = () => {
   const [currentTopic, setCurrentTopic] = useState<string | null>(null);
   const [userProgress, setUserProgress] = useState<UserProgress>({});
   const [highScores, setHighScores] = useState<HighScore[]>([]);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -56,9 +60,33 @@ const App: React.FC = () => {
 
   const handleTopicSelect = (topic: string) => {
     setCurrentTopic(topic);
+    setCurrentQuestion(userProgress[topic]?.completed || 0);
+    setElapsedTime(userProgress[topic]?.elapsed || 0);
+    setScore(getInitialScore(topic));
   };
 
-  const handleQuizComplete = async (score: number, time: string) => {
+  const handleTopicReset = async (topic: string) => {
+    if (!user) return;
+
+    const updatedProgress = {
+      ...userProgress,
+      [topic]: { completed: 0, time: null, elapsed: 0 },
+    };
+    setUserProgress(updatedProgress);
+    await setDoc(doc(db, "users", user.uid), updatedProgress);
+
+    const highScoreDoc = doc(db, "highScores", `${user.uid}_${topic}`);
+    await setDoc(highScoreDoc, { name: user.displayName || user.email || "", score: 0, topic });
+
+    await loadUserData();
+    await loadHighScores();
+    setCurrentTopic(topic);
+    setCurrentQuestion(0);
+    setElapsedTime(0);
+    setScore(0);
+  };
+
+  const handleQuizComplete = async (newScore: number, time: string) => {
     if (!user || !currentTopic) return;
     const updatedProgress = {
       ...userProgress,
@@ -72,32 +100,35 @@ const App: React.FC = () => {
     await setDoc(doc(db, "users", user.uid), updatedProgress);
 
     const highScoreDoc = doc(db, "highScores", `${user.uid}_${currentTopic}`);
-    await setDoc(highScoreDoc, { name: user.displayName || user.email, score, topic: currentTopic });
+    await setDoc(highScoreDoc, { name: user.displayName || user.email || "", score: newScore, topic: currentTopic });
 
     await loadUserData();
     await loadHighScores();
-    setCurrentTopic(null);
   };
 
-  const handleQuizQuit = async (elapsed: number, score: number, completed: number) => {
+  const handleQuizQuit = async (newElapsed: number, newScore: number, newCompleted: number) => {
     if (!user || !currentTopic) return;
     const updatedProgress = {
       ...userProgress,
       [currentTopic]: {
-        completed,
+        completed: newCompleted,
         time: null,
-        elapsed,
+        elapsed: newElapsed,
       },
     };
     setUserProgress(updatedProgress);
     await setDoc(doc(db, "users", user.uid), updatedProgress);
 
     const highScoreDoc = doc(db, "highScores", `${user.uid}_${currentTopic}`);
-    await setDoc(highScoreDoc, { name: user.displayName || user.email, score, topic: currentTopic });
+    await setDoc(highScoreDoc, { name: user.displayName || user.email || "", score: newScore, topic: currentTopic });
 
     await loadUserData();
     await loadHighScores();
     setCurrentTopic(null);
+    setElapsedTime(0);
+    setScore(0);
+    setCurrentQuestion(0);
+    navigate("/");
   };
 
   const handleResetProgress = async () => {
@@ -125,7 +156,7 @@ const App: React.FC = () => {
       const highScoresCol = collection(db, "highScores");
       const highScoresSnap = await getDocs(highScoresCol);
       const userHighScores = highScoresSnap.docs.filter(
-        (doc) => doc.data().name === (user.displayName || user.email)
+        (doc) => doc.data().name === (user.displayName || user.email || "")
       );
       await Promise.all(
         userHighScores.map((doc) => setDoc(doc.ref, { ...doc.data(), score: 0 }))
@@ -137,38 +168,59 @@ const App: React.FC = () => {
     }
   };
 
+  const handleHeaderClick = async () => {
+    if (currentTopic) {
+      const result = await Swal.fire({
+        title: "Return Home?",
+        text: "Your progress will be saved.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, go home",
+      });
+      if (result.isConfirmed) {
+        await handleQuizQuit(elapsedTime, score, currentQuestion);
+      }
+    } else {
+      navigate("/");
+    }
+  };
+
   const getInitialScore = (topic: string) => {
     const highScore = highScores.find(
-      (hs) => hs.topic === topic && hs.name === (user?.displayName || user?.email)
+      (hs) => hs.topic === topic && hs.name === (user?.displayName || user?.email || "")
     );
     return highScore ? highScore.score : 0;
   };
 
+  const handleEndScreenNavigation = () => {
+    setCurrentTopic(null);
+    setElapsedTime(0);
+    setScore(0);
+    setCurrentQuestion(0);
+    navigate("/");
+  };
+
+  const userName: string = user?.displayName || user?.email || "";
+
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <Routes>
-          <Route path="/sign-in" element={!user ? <SignIn /> : <Navigate to="/" />} />
-          <Route path="/sign-up" element={!user ? <SignUp /> : <Navigate to="/" />} />
-          <Route
-            path="/"
-            element={
-              user ? (
-                <>
+    <div className="min-h-screen bg-gray-50">
+      <Header onClick={handleHeaderClick} />
+      <Routes>
+        <Route path="/sign-in" element={!user ? <SignIn /> : <Navigate to="/" />} />
+        <Route path="/sign-up" element={!user ? <SignUp /> : <Navigate to="/" />} />
+        <Route
+          path="/"
+          element={
+            user ? (
+              <>
+                {!currentTopic && (
                   <nav className="p-4 pt-8 flex justify-center space-x-6">
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Link
-                        to="/"
-                        className="bg-indigo-500 text-white px-6 py-3 rounded-full hover:bg-indigo-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
-                      >
-                        Home
-                      </Link>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.05 }}>
-                      <Link
                         to="/leaderboard"
-                        className="bg-purple-500 text-white px-6 py-3 rounded-full hover:bg-purple-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
+                        className="bg-purple-500 text-white px-6 py-3 rounded-full hover:bg-purple-600 transition shadow-md"
                       >
                         Leaderboard
                       </Link>
@@ -176,45 +228,57 @@ const App: React.FC = () => {
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Link
                         to="/faq"
-                        className="bg-teal-500 text-white px-6 py-3 rounded-full hover:bg-teal-600 transition shadow-md" // Increased from px-4 py-2 to px-6 py-3
+                        className="bg-teal-500 text-white px-6 py-3 rounded-full hover:bg-teal-600 transition shadow-md"
                       >
                         FAQ
                       </Link>
                     </motion.div>
                   </nav>
-                  {currentTopic ? (
-                    <Quiz
-                      topic={currentTopic}
-                      questions={topics.find((t) => t.name === currentTopic)!.questions}
-                      onComplete={handleQuizComplete}
-                      initialProgress={userProgress[currentTopic]?.completed || 0}
-                      initialElapsed={userProgress[currentTopic]?.elapsed || 0}
-                      initialScore={getInitialScore(currentTopic)}
-                      onQuit={handleQuizQuit}
-                    />
-                  ) : (
-                    <TopicSelector
-                      topics={topics}
-                      userProgress={userProgress}
-                      onSelectTopic={handleTopicSelect}
-                      onResetProgress={handleResetProgress}
-                    />
-                  )}
-                </>
-              ) : (
-                <Navigate to="/sign-in" />
-              )
-            }
-          />
-          <Route
-            path="/leaderboard"
-            element={user ? <Leaderboard highScores={highScores} userProgress={userProgress} /> : <Navigate to="/sign-in" />}
-          />
-          <Route path="/faq" element={user ? <FAQ /> : <Navigate to="/sign-in" />} />
-          <Route path="*" element={<Navigate to="/sign-in" />} />
-        </Routes>
-      </div>
-    </Router>
+                )}
+                {currentTopic ? (
+                  <Quiz
+                    topic={currentTopic}
+                    questions={topics.find((t) => t.name === currentTopic)!.questions}
+                    onComplete={handleQuizComplete}
+                    initialProgress={userProgress[currentTopic]?.completed || 0}
+                    initialElapsed={userProgress[currentTopic]?.elapsed || 0}
+                    initialScore={getInitialScore(currentTopic)}
+                    onQuit={handleQuizQuit}
+                    elapsedTime={elapsedTime}
+                    setElapsedTime={setElapsedTime}
+                    score={score}
+                    setScore={setScore}
+                    currentQuestion={currentQuestion}
+                    setCurrentQuestion={setCurrentQuestion}
+                    userProgress={userProgress}
+                    topics={topics}
+                    onEndScreenNavigation={handleEndScreenNavigation}
+                  />
+                ) : (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    highScores={highScores}
+                    onSelectTopic={handleTopicSelect}
+                    onResetProgress={handleResetProgress}
+                    onResetTopic={handleTopicReset}
+                    userName={userName}
+                  />
+                )}
+              </>
+            ) : (
+              <Navigate to="/sign-in" />
+            )
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={user ? <Leaderboard highScores={highScores} userProgress={userProgress} /> : <Navigate to="/sign-in" />}
+        />
+        <Route path="/faq" element={user ? <FAQ /> : <Navigate to="/sign-in" />} />
+        <Route path="*" element={<Navigate to="/sign-in" />} />
+      </Routes>
+    </div>
   );
 };
 

@@ -1,10 +1,14 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom"; // Add Link for navigation
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onClick: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -24,13 +28,14 @@ const Header: React.FC = () => {
       initial={{ y: -50 }}
       animate={{ y: 0 }}
       className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-center items-center shadow-lg relative"
+      onClick={onClick} // Make entire header clickable
     >
-      <Link to="/" className="flex items-center space-x-2"> {/* Link to home page */}
+      <Link to="/" className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
         <img src="/icons8-done-bubbles-120.png" alt="Favicon" className="w-8 h-8" />
         <span className="text-2xl font-bold hover:text-yellow-300 transition">Code Quizzer</span>
       </Link>
       {user && (
-        <div className="absolute right-4 flex items-center space-x-4">
+        <div className="absolute right-4 flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
           <span className="text-base font-medium">{user.displayName || user.email}</span>
           <motion.button
             whileHover={{ scale: 1.05 }}

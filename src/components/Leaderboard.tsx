@@ -12,7 +12,6 @@ interface LeaderboardProps {
 const Leaderboard: React.FC<LeaderboardProps> = ({ highScores, userProgress }) => {
   const navigate = useNavigate();
 
-  // Calculate total questions answered and total score per user
   const userStats = highScores.reduce((acc, entry) => {
     if (!acc[entry.name]) {
       acc[entry.name] = { totalScore: 0, totalQuestions: 0 };
@@ -23,10 +22,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores, userProgress }) =
     return acc;
   }, {} as { [name: string]: { totalScore: number; totalQuestions: number } });
 
-  // Total possible questions across all topics (9 topics × 30 questions = 270)
   const totalPossibleQuestions = topics.reduce((sum, topic) => sum + topic.questions.length, 0);
 
-  // Sort users by total score for ranking
   const rankedUsers = Object.entries(userStats)
     .map(([name, { totalScore, totalQuestions }]) => ({ name, totalScore, totalQuestions }))
     .sort((a, b) => b.totalScore - a.totalScore);
@@ -51,7 +48,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores, userProgress }) =
           <span>Score</span>
         </div>
         {rankedUsers.map((entry, index) => {
-          const rank = entry.totalQuestions > 0 ? index + 1 : "N/A";
+          const rank = entry.totalScore > 0 ? index + 1 : "N/A"; // Only N/A if no score
           return (
             <motion.div
               key={entry.name}

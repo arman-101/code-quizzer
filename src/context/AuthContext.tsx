@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<UserCredential>; // Correct return type
+  loginWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
 }
 
@@ -27,24 +27,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
     });
-    return unsubscribe;
+    return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
 
   const loginWithEmail = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    setUser(userCredential.user); // Explicitly update user state
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    setUser(userCredential.user); // Explicitly update user state
   };
 
   const loginWithGoogle = async (): Promise<UserCredential> => {
     const provider = new GoogleAuthProvider();
-    return await signInWithPopup(auth, provider);
+    const userCredential = await signInWithPopup(auth, provider);
+    setUser(userCredential.user); // Explicitly update user state
+    return userCredential;
   };
 
   const logout = async () => {
     await signOut(auth);
+    setUser(null); // Explicitly clear user state
   };
 
   return (
