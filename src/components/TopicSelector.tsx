@@ -10,7 +10,7 @@ interface TopicSelectorProps {
   onSelectTopic: (topic: string) => void;
   onResetProgress: () => void;
   onResetTopic: (topic: string) => void;
-  userName: string; // New prop for current user's name
+  userName: string;
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
@@ -83,8 +83,8 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
               key={topic.name}
               whileHover={{ scale: 1.03, boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)" }}
               onClick={() => handleTopicClick(topic)}
-              className={`bg-white text-gray-800 p-4 rounded-lg shadow-md hover:bg-indigo-50 transition border border-gray-200 ${
-                isCompleted ? "bg-green-100 hover:bg-green-200" : ""
+              className={`relative bg-white text-gray-800 p-4 rounded-lg shadow-md hover:bg-indigo-50 transition border border-gray-200 ${
+                isCompleted ? "bg-green-100" : ""
               }`}
             >
               <span className="font-semibold text-lg">{capitalizeTopic(topic.name)}</span>
@@ -92,6 +92,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
                 ({progress.completed}/{topic.questions.length} - {topicScore}/{maxScore})
                 {progress.time && ` - ${progress.time}`}
               </p>
+              {isCompleted && (
+                <div className="absolute inset-0 bg-green-500 opacity-30 rounded-lg pointer-events-none" />
+              )}
             </motion.button>
           );
         })}
