@@ -1,32 +1,80 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { HighScore, UserProgress } from "../types";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { topics } from "../data/questions";
+import { db } from "../firebase"; // Import Firebase Firestore
+import { collection, getDocs } from "firebase/firestore";
 
 interface LeaderboardProps {
   highScores: HighScore[];
-  userProgress: UserProgress;
+  userProgress: UserProgress; // Still passed but not used for other users
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ highScores, userProgress }) => {
-  const navigate = useNavigate();
+interface UserStat {
+  name: string;
+  totalScore: number;
+  totalQuestions: number;
+}
 
-  const userStats = highScores.reduce((acc, entry) => {
-    if (!acc[entry.name]) {
-      acc[entry.name] = { totalScore: 0, totalQuestions: 0 };
-    }
-    acc[entry.name].totalScore += entry.score;
-    const topicProgress = userProgress[entry.topic];
-    acc[entry.name].totalQuestions += topicProgress ? topicProgress.completed : 0;
-    return acc;
-  }, {} as { [name: string]: { totalScore: number; totalQuestions: number } });
+const Leaderboard: React.FC<LeaderboardProps> = ({ highScores }) => {
+  const navigate = useNavigate();
+  const [userStats, setUserStats] = useState<UserStat[]>([]);
 
   const totalPossibleQuestions = topics.reduce((sum, topic) => sum + topic.questions.length, 0);
 
-  const rankedUsers = Object.entries(userStats)
-    .map(([name, { totalScore, totalQuestions }]) => ({ name, totalScore, totalQuestions }))
-    .sort((a, b) => b.totalScore - a.totalScore);
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      // Aggregate high scores by user
+      const scoreMap: { [name: string]: { totalScore: number; userId?: string } } = highScores.reduce(
+        (acc, entry) => {
+          if (!acc[entry.name]) {
+            acc[entry.name] = { totalScore: 0 };
+          }
+          acc[entry.name].totalScore += entry.score;
+          return acc;
+        },
+        {} as { [name: string]: { totalScore: number; userId?: string } }
+      );
+
+      // Fetch all users' progress from Firestore
+      const usersCol = collection(db, "users");
+      const usersSnap = await getDocs(usersCol);
+      const allUserProgress: { [userId: string]: UserProgress } = {};
+      usersSnap.docs.forEach((doc) => {
+        allUserProgress[doc.id] = doc.data() as UserProgress;
+      });
+
+      // Map high scores to user IDs (assuming name is displayName or email)
+      const highScoresCol = collection(db, "highScores");
+      const highScoresSnap = await getDocs(highScoresCol);
+      highScoresSnap.docs.forEach((doc) => {
+        const data = doc.data() as HighScore;
+        const userId = doc.id.split("_")[0]; // Extract userId from highScore doc ID (e.g., "uid_topic")
+        if (scoreMap[data.name]) {
+          scoreMap[data.name].userId = userId;
+        }
+      });
+
+      // Calculate stats for each user
+      const stats: UserStat[] = Object.entries(scoreMap).map(([name, { totalScore, userId }]) => {
+        let totalQuestions = 0;
+        if (userId && allUserProgress[userId]) {
+          totalQuestions = Object.values(allUserProgress[userId]).reduce(
+            (sum, progress) => sum + progress.completed,
+            0
+          );
+        }
+        return { name, totalScore, totalQuestions };
+      });
+
+      // Sort by totalScore descending
+      stats.sort((a, b) => b.totalScore - a.totalScore);
+      setUserStats(stats);
+    };
+
+    fetchUserStats();
+  }, [highScores]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 max-w-2xl mx-auto">
@@ -47,7 +95,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores, userProgress }) =
           <span>Questions</span>
           <span>Score</span>
         </div>
-        {rankedUsers.map((entry, index) => {
+        {userStats.map((entry, index) => {
           const rank = entry.totalScore > 0 ? index + 1 : "N/A"; // Only N/A if no score
           return (
             <motion.div
