@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { HighScore, UserProgress } from "../types";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { topics } from "../data/questions";
-import { db } from "../firebase"; // Import Firebase Firestore
+import { useAuth } from "../context/AuthContext"; // Import useAuth to get current user
+import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { HighScore, UserProgress } from "../types";
+import { topics } from "../data/questions";
 
 interface LeaderboardProps {
-  highScores: HighScore[];
-  userProgress: UserProgress; // Still passed but not used for other users
+  highScores: HighScore[]; // Unused now, kept for compatibility
+  userProgress: UserProgress; // Unused now, kept for compatibility
 }
 
 interface UserStat {
@@ -17,27 +18,30 @@ interface UserStat {
   totalQuestions: number;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ highScores }) => {
+const Leaderboard: React.FC<LeaderboardProps> = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get current user
   const [userStats, setUserStats] = useState<UserStat[]>([]);
-
   const totalPossibleQuestions = topics.reduce((sum, topic) => sum + topic.questions.length, 0);
 
   useEffect(() => {
     const fetchUserStats = async () => {
-      // Aggregate high scores by user
-      const scoreMap: { [name: string]: { totalScore: number; userId?: string } } = highScores.reduce(
-        (acc, entry) => {
-          if (!acc[entry.name]) {
-            acc[entry.name] = { totalScore: 0 };
-          }
-          acc[entry.name].totalScore += entry.score;
-          return acc;
-        },
-        {} as { [name: string]: { totalScore: number; userId?: string } }
-      );
+      // Fetch all high scores
+      const highScoresCol = collection(db, "highScores");
+      const highScoresSnap = await getDocs(highScoresCol);
 
-      // Fetch all users' progress from Firestore
+      // Aggregate scores by user
+      const scoreMap: { [userId: string]: { name: string; totalScore: number } } = {};
+      highScoresSnap.docs.forEach((doc) => {
+        const data = doc.data() as HighScore;
+        const userId = doc.id.split("_")[0]; // Extract userId from doc ID (e.g., "uid_topic")
+        if (!scoreMap[userId]) {
+          scoreMap[userId] = { name: data.name, totalScore: 0 };
+        }
+        scoreMap[userId].totalScore += data.score;
+      });
+
+      // Fetch all users' progress
       const usersCol = collection(db, "users");
       const usersSnap = await getDocs(usersCol);
       const allUserProgress: { [userId: string]: UserProgress } = {};
@@ -45,27 +49,18 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores }) => {
         allUserProgress[doc.id] = doc.data() as UserProgress;
       });
 
-      // Map high scores to user IDs (assuming name is displayName or email)
-      const highScoresCol = collection(db, "highScores");
-      const highScoresSnap = await getDocs(highScoresCol);
-      highScoresSnap.docs.forEach((doc) => {
-        const data = doc.data() as HighScore;
-        const userId = doc.id.split("_")[0]; // Extract userId from highScore doc ID (e.g., "uid_topic")
-        if (scoreMap[data.name]) {
-          scoreMap[data.name].userId = userId;
-        }
-      });
-
       // Calculate stats for each user
-      const stats: UserStat[] = Object.entries(scoreMap).map(([name, { totalScore, userId }]) => {
+      const stats: UserStat[] = Object.entries(scoreMap).map(([userId, { name, totalScore }]) => {
         let totalQuestions = 0;
-        if (userId && allUserProgress[userId]) {
+        if (allUserProgress[userId]) {
           totalQuestions = Object.values(allUserProgress[userId]).reduce(
-            (sum, progress) => sum + progress.completed,
+            (sum, progress) => sum + (progress.completed || 0),
             0
           );
         }
-        return { name, totalScore, totalQuestions };
+        // Use current user's displayName if it's their entry
+        const displayName = user && user.uid === userId ? user.displayName || user.email || name : name;
+        return { name: displayName, totalScore, totalQuestions };
       });
 
       // Sort by totalScore descending
@@ -74,7 +69,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores }) => {
     };
 
     fetchUserStats();
-  }, [highScores]);
+  }, [user]); // Add user to dependencies to re-fetch if user changes (e.g., name update)
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 max-w-2xl mx-auto">
@@ -96,7 +91,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores }) => {
           <span>Score</span>
         </div>
         {userStats.map((entry, index) => {
-          const rank = entry.totalScore > 0 ? index + 1 : "N/A"; // Only N/A if no score
+          const rank = entry.totalScore > 0 ? index + 1 : "N/A";
           return (
             <motion.div
               key={entry.name}

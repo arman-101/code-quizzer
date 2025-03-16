@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { db } from "./firebase";
@@ -25,38 +25,27 @@ const App: React.FC = () => {
   const [highScores, setHighScores] = useState<HighScore[]>([]);
   const [streak, setStreak] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      loadUserData();
-      loadHighScores();
-      updateStreak();
-    } else {
-      setUserProgress({});
-      setHighScores([]);
-      setStreak(0);
-    }
-  }, [user]);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (!user) return;
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) {
       setUserProgress(userDoc.data() as UserProgress);
     }
-  };
+  }, [user]);
 
-  const loadHighScores = async () => {
+  const loadHighScores = useCallback(async () => {
+    if (!user) return;
     const scores: HighScore[] = [];
     for (const topic of topics) {
-      const highScoreDoc = await getDoc(doc(db, "highScores", `${user?.uid}_${topic.name}`));
+      const highScoreDoc = await getDoc(doc(db, "highScores", `${user.uid}_${topic.name}`));
       if (highScoreDoc.exists()) {
         scores.push(highScoreDoc.data() as HighScore);
       }
     }
     setHighScores(scores);
-  };
+  }, [user]);
 
-  const updateStreak = async () => {
+  const updateStreak = useCallback(async () => {
     if (!user) return;
     const profileDocRef = doc(db, "profiles", user.uid);
     const profileDoc = await getDoc(profileDocRef);
@@ -72,10 +61,8 @@ const App: React.FC = () => {
       const yesterdayStr = yesterday.toISOString().split("T")[0];
 
       if (lastLogin === today) {
-        // Already logged in today, no change
         setStreak(currentStreak);
       } else if (lastLogin === yesterdayStr) {
-        // New day, increment streak
         currentStreak += 1;
         setStreak(currentStreak);
         await setDoc(profileDocRef, { lastLogin: today, streak: currentStreak }, { merge: true });
@@ -88,7 +75,6 @@ const App: React.FC = () => {
           timerProgressBar: true,
         });
       } else if (!lastLogin || lastLogin < yesterdayStr) {
-        // Missed a day or first login, reset to 1
         currentStreak = 1;
         setStreak(currentStreak);
         await setDoc(profileDocRef, { lastLogin: today, streak: currentStreak }, { merge: true });
@@ -102,7 +88,6 @@ const App: React.FC = () => {
         });
       }
     } else {
-      // First login ever
       const initialStreak = 1;
       setStreak(initialStreak);
       await setDoc(profileDocRef, { lastLogin: today, streak: initialStreak, displayName: user.displayName || user.email, bio: "" }, { merge: true });
@@ -115,7 +100,19 @@ const App: React.FC = () => {
         timerProgressBar: true,
       });
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+      loadHighScores();
+      updateStreak();
+    } else {
+      setUserProgress({});
+      setHighScores([]);
+      setStreak(0);
+    }
+  }, [user, loadUserData, loadHighScores, updateStreak]);
 
   const handleQuizComplete = async (newScore: number, time: string) => {
     if (!user || !currentTopic) return;
@@ -220,7 +217,7 @@ const App: React.FC = () => {
                   userProgress={userProgress}
                   setCurrentTopic={setCurrentTopic}
                   handleResetAll={handleResetAll}
-                  streak={streak} // Pass streak to TopicSelector
+                  streak={streak}
                 />
               )
             ) : (
