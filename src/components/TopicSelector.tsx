@@ -1,52 +1,74 @@
 import React from "react";
-import { Topic, UserProgress, HighScore } from "../types";
 import { motion } from "framer-motion";
+import { Topic, UserProgress } from "../types";
 import Swal from "sweetalert2";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../context/AuthContext";
 
 interface TopicSelectorProps {
   topics: Topic[];
   userProgress: UserProgress;
-  highScores: HighScore[];
-  onSelectTopic: (topic: string) => void;
-  onResetProgress: () => void;
-  onResetTopic: (topic: string) => void;
-  userName: string;
+  setCurrentTopic: React.Dispatch<React.SetStateAction<string | null>>;
+  handleResetAll: () => Promise<void>;
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
   topics,
   userProgress,
-  highScores,
-  onSelectTopic,
-  onResetProgress,
-  onResetTopic,
-  userName,
+  setCurrentTopic,
+  handleResetAll,
 }) => {
-  const totalScore = highScores
-    .filter((hs) => hs.name === userName)
-    .reduce((sum, hs) => sum + hs.score, 0);
+  const { user } = useAuth();
 
-  const handleTopicClick = async (topic: Topic) => {
-    const progress = userProgress[topic.name] || { completed: 0, time: null, elapsed: 0 };
-    const isCompleted = progress.completed === topic.questions.length;
+  const handleTopicClick = async (topicName: string) => {
+    const progress = userProgress[topicName];
+    const total = topics.find((t) => t.name === topicName)!.questions.length;
+    const isCompleted = progress && progress.completed === total;
 
-    if (isCompleted) {
+    if (isCompleted && user) {
       const result = await Swal.fire({
-        title: "Re-Try Topic?",
-        text: "This topic is already completed. Starting it again will reset your progress for this topic.",
-        icon: "warning",
+        title: "Retry Topic?",
+        text: `You've completed ${capitalizeTopic(
+          topicName
+        )}. Retrying will reset your progress for this topic.`,
+        icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, re-try",
+        confirmButtonText: "Yes, retry",
       });
 
       if (result.isConfirmed) {
-        onResetTopic(topic.name);
+        const updatedProgress = { ...userProgress, [topicName]: { completed: 0, time: null, elapsed: 0 } };
+        await setDoc(doc(db, "users", user.uid), updatedProgress);
+        await setDoc(doc(db, "highScores", `${user.uid}_${topicName}`), {
+          name: user.displayName || user.email || "",
+          score: 0,
+          topic: topicName,
+        });
+        setCurrentTopic(topicName);
       }
     } else {
-      onSelectTopic(topic.name);
+      setCurrentTopic(topicName);
     }
+  };
+
+  const resetProgress = () => {
+    Swal.fire({
+      title: "Reset All Progress?",
+      text: "This will reset all your quiz progress and scores!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, reset it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleResetAll();
+        Swal.fire("Reset!", "Your progress has been reset.", "success");
+      }
+    });
   };
 
   const capitalizeTopic = (topicName: string) =>
@@ -57,56 +79,58 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       .join(" ");
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <motion.h2
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-3xl font-bold mb-6 text-center text-gray-800"
-      >
-        Choose a Topic
-      </motion.h2>
-      <p className="text-center text-lg mb-4 text-gray-600">
-        Your Total Score: <span className="font-semibold text-indigo-600">{totalScore}</span>
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="p-6 max-w-4xl mx-auto"
+    >
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+        Select a Topic
+      </h2>
+      <div className="grid grid-cols-3 gap-4">
         {topics.map((topic) => {
-          const progress = userProgress[topic.name] || { completed: 0, time: null, elapsed: 0 };
-          const topicScore = highScores.find((hs) => hs.topic === topic.name && hs.name === userName)?.score || 0;
-          const maxScore = topic.questions.reduce(
-            (sum, q) => sum + (q.difficulty <= 10 ? 10 : q.difficulty <= 20 ? 20 : 30),
-            0
-          );
-          const isCompleted = progress.completed === topic.questions.length;
+          const progress = userProgress[topic.name];
+          const completed = progress?.completed || 0;
+          const total = topic.questions.length;
+          const percentage = total > 0 ? (completed / total) * 100 : 0;
+          const isCompleted = completed === total;
 
           return (
-            <motion.button
+            <motion.div
               key={topic.name}
-              whileHover={{ scale: 1.03, boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)" }}
-              onClick={() => handleTopicClick(topic)}
-              className={`relative bg-white text-gray-800 p-4 rounded-lg shadow-md hover:bg-indigo-50 transition border border-gray-200 ${
-                isCompleted ? "bg-green-100" : ""
+              whileHover={{ scale: 1.03 }}
+              onClick={() => handleTopicClick(topic.name)}
+              className={`relative bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow border border-gray-200 ${
+                isCompleted ? "overflow-hidden" : ""
               }`}
             >
-              <span className="font-semibold text-lg">{capitalizeTopic(topic.name)}</span>
-              <p className="text-sm text-gray-600">
-                ({progress.completed}/{topic.questions.length} - {topicScore}/{maxScore})
-                {progress.time && ` - ${progress.time}`}
-              </p>
               {isCompleted && (
-                <div className="absolute inset-0 bg-green-500 opacity-30 rounded-lg pointer-events-none" />
+                <div className="absolute inset-0 bg-green-500 opacity-30 pointer-events-none"></div>
               )}
-            </motion.button>
+              <h3 className="text-xl font-semibold text-indigo-600 relative z-10">
+                {capitalizeTopic(topic.name)}
+              </h3>
+              <p className="text-gray-600 mt-2 relative z-10">
+                {completed}/{total} Questions Completed
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2 relative z-10">
+                <div
+                  className="bg-indigo-500 h-2.5 rounded-full"
+                  style={{ width: `${percentage}%` }}
+                ></div>
+              </div>
+            </motion.div>
           );
         })}
       </div>
       <motion.button
         whileHover={{ scale: 1.05 }}
-        onClick={onResetProgress}
-        className="mt-6 w-full max-w-[12rem] mx-auto block bg-red-500 text-white py-2 rounded-full hover:bg-red-600 transition"
+        onClick={resetProgress}
+        className="mt-6 w-full max-w-xs mx-auto block bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition font-semibold"
       >
-        Reset My Progress
+        Reset All Progress
       </motion.button>
-    </div>
+    </motion.div>
   );
 };
 

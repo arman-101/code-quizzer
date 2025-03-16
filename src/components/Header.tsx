@@ -1,51 +1,96 @@
 import React from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Swal from "sweetalert2";
+import { useAuth } from "../context/AuthContext";
 
-interface HeaderProps {
-  onClick: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onClick }) => {
-  const { user, logout } = useAuth();
+const Header: React.FC = () => {
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    Swal.fire({
-      title: "Logged out",
-      icon: "info",
-      timer: 1500,
-      showConfirmButton: false,
-    });
-    navigate("/sign-in");
-  };
+  const { user, logout } = useAuth();
 
   return (
     <motion.header
       initial={{ y: -50 }}
       animate={{ y: 0 }}
-      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-center items-center shadow-lg relative"
-      onClick={onClick} // Make entire header clickable
+      className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-lg"
     >
-      <Link to="/" className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-        <img src="/icons8-done-bubbles-120.png" alt="Favicon" className="w-8 h-8" />
-        <span className="text-2xl font-bold hover:text-yellow-300 transition">Code Quizzer</span>
-      </Link>
-      {user && (
-        <div className="absolute right-4 flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
-          <span className="text-base font-medium">{user.displayName || user.email}</span>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={handleLogout}
-            className="bg-red-500 px-4 py-2 rounded-full hover:bg-red-600 transition"
-          >
-            Logout
-          </motion.button>
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
+        {/* Left: Title */}
+        <h1
+          className="text-2xl font-bold cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          Code Quizzer
+        </h1>
+
+        {/* Center: Navigation Buttons */}
+        {user && (
+          <div className="flex items-center space-x-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => navigate("/leaderboard")}
+              className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+            >
+              Leaderboard
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => navigate("/profile")}
+              className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+            >
+              Profile
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => navigate("/faq")}
+              className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+            >
+              FAQ
+            </motion.button>
+          </div>
+        )}
+
+        {/* Right: User Info or Sign In/Sign Up */}
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <div className="flex items-center space-x-3">
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full border-2 border-white"
+                />
+              )}
+              <span className="text-lg font-medium">
+                {user.displayName || user.email}
+              </span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={logout}
+                className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
+              >
+                Logout
+              </motion.button>
+            </div>
+          ) : (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => navigate("/signin")}
+                className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+              >
+                Sign In
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => navigate("/signup")}
+                className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+              >
+                Sign Up
+              </motion.button>
+            </>
+          )}
         </div>
-      )}
+      </div>
     </motion.header>
   );
 };

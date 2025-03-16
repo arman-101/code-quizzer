@@ -1,0 +1,158 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
+import Swal from "sweetalert2";
+
+const Profile: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState(user?.displayName || "");
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        try {
+          const profileDoc = await getDoc(doc(db, "profiles", user.uid));
+          if (profileDoc.exists()) {
+            const data = profileDoc.data();
+            setBio(data.bio || "");
+            setDisplayName(data.displayName || user.displayName || "");
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      };
+      fetchProfile();
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      // Update Firebase Auth profile (only displayName)
+      console.log("Updating Firebase Auth profile...");
+      await updateProfile(user, { displayName });
+      console.log("Firebase Auth profile updated.");
+
+      // Save to Firestore
+      console.log("Saving to Firestore...");
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        { displayName, bio },
+        { merge: true }
+      );
+      console.log("Firestore save complete.");
+
+      Swal.fire({
+        title: "Success!",
+        text: "Your profile has been updated.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+      Swal.fire({
+        title: "Error",
+        text: `Failed to update profile: ${error instanceof Error ? error.message : "Unknown error"}`,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setLoading(false);
+      console.log("Loading state reset.");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-8 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-center justify-center"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full border border-gray-200">
+        <h2 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
+          Your Profile
+        </h2>
+
+        {/* Profile Icon (Matches Header.tsx) */}
+        <div className="flex justify-center mb-6">
+          {user?.photoURL ? (
+            <img
+              src={user.photoURL}
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-indigo-200 object-cover"
+            />
+          ) : (
+            <img
+              src="https://via.placeholder.com/120"
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-indigo-200 object-cover"
+            />
+          )}
+        </div>
+
+        {/* Name Input */}
+        <div className="mb-6">
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Display Name
+          </label>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            placeholder="Enter your name"
+          />
+        </div>
+
+        {/* Bio Input */}
+        <div className="mb-6">
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Bio
+          </label>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
+            rows={4}
+            placeholder="Tell us about yourself..."
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-center space-x-6">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/")}
+            className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-full shadow-md hover:from-gray-600 hover:to-gray-700 transition-all duration-300 text-lg font-semibold"
+          >
+            Back to Home
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            disabled={loading}
+            className={`bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-8 py-3 rounded-full shadow-md hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 text-lg font-semibold ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {loading ? "Saving..." : "Save Profile"}
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default Profile;
