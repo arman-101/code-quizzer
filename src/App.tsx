@@ -13,6 +13,7 @@ import FAQ from "./components/FAQ";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
+import Swal from "sweetalert2";
 
 const App: React.FC = () => {
   const { user } = useAuth();
@@ -22,14 +23,17 @@ const App: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userProgress, setUserProgress] = useState<UserProgress>({});
   const [highScores, setHighScores] = useState<HighScore[]>([]);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     if (user) {
       loadUserData();
       loadHighScores();
+      updateStreak();
     } else {
       setUserProgress({});
       setHighScores([]);
+      setStreak(0);
     }
   }, [user]);
 
@@ -50,6 +54,67 @@ const App: React.FC = () => {
       }
     }
     setHighScores(scores);
+  };
+
+  const updateStreak = async () => {
+    if (!user) return;
+    const profileDocRef = doc(db, "profiles", user.uid);
+    const profileDoc = await getDoc(profileDocRef);
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    if (profileDoc.exists()) {
+      const data = profileDoc.data();
+      const lastLogin = data.lastLogin || "";
+      let currentStreak = data.streak || 0;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+      if (lastLogin === today) {
+        // Already logged in today, no change
+        setStreak(currentStreak);
+      } else if (lastLogin === yesterdayStr) {
+        // New day, increment streak
+        currentStreak += 1;
+        setStreak(currentStreak);
+        await setDoc(profileDocRef, { lastLogin: today, streak: currentStreak }, { merge: true });
+        Swal.fire({
+          title: "Streak Increased!",
+          text: `Your login streak is now ${currentStreak} days!`,
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+          timer: 2000,
+          timerProgressBar: true,
+        });
+      } else if (!lastLogin || lastLogin < yesterdayStr) {
+        // Missed a day or first login, reset to 1
+        currentStreak = 1;
+        setStreak(currentStreak);
+        await setDoc(profileDocRef, { lastLogin: today, streak: currentStreak }, { merge: true });
+        Swal.fire({
+          title: "Streak Started!",
+          text: "Your login streak is now 1 day!",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+          timer: 2000,
+          timerProgressBar: true,
+        });
+      }
+    } else {
+      // First login ever
+      const initialStreak = 1;
+      setStreak(initialStreak);
+      await setDoc(profileDocRef, { lastLogin: today, streak: initialStreak, displayName: user.displayName || user.email, bio: "" }, { merge: true });
+      Swal.fire({
+        title: "Streak Started!",
+        text: "Your login streak is now 1 day!",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        timer: 2000,
+        timerProgressBar: true,
+      });
+    }
   };
 
   const handleQuizComplete = async (newScore: number, time: string) => {
@@ -155,6 +220,7 @@ const App: React.FC = () => {
                   userProgress={userProgress}
                   setCurrentTopic={setCurrentTopic}
                   handleResetAll={handleResetAll}
+                  streak={streak} // Pass streak to TopicSelector
                 />
               )
             ) : (

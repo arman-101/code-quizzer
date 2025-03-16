@@ -11,6 +11,7 @@ interface TopicSelectorProps {
   userProgress: UserProgress;
   setCurrentTopic: React.Dispatch<React.SetStateAction<string | null>>;
   handleResetAll: () => Promise<void>;
+  streak: number; // New prop for streak
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
@@ -18,6 +19,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   userProgress,
   setCurrentTopic,
   handleResetAll,
+  streak,
 }) => {
   const { user } = useAuth();
 
@@ -84,9 +86,14 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       animate={{ opacity: 1 }}
       className="p-6 max-w-4xl mx-auto"
     >
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Select a Topic
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">
+          Select a Topic
+        </h2>
+        <div className="flex items-center bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-full shadow-md">
+          <span className="text-lg font-semibold">Streak: {streak} days</span>
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-4">
         {topics.map((topic) => {
           const progress = userProgress[topic.name];
