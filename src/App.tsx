@@ -218,6 +218,7 @@ const App: React.FC = () => {
                   setCurrentTopic={setCurrentTopic}
                   handleResetAll={handleResetAll}
                   streak={streak}
+                  highScores={highScores} // Pass highScores here
                 />
               )
             ) : (

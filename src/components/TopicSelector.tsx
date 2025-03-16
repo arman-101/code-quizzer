@@ -11,7 +11,8 @@ interface TopicSelectorProps {
   userProgress: UserProgress;
   setCurrentTopic: React.Dispatch<React.SetStateAction<string | null>>;
   handleResetAll: () => Promise<void>;
-  streak: number; // New prop for streak
+  streak: number;
+  highScores: { name: string; score: number; topic: string }[]; // Add highScores prop
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
@@ -20,8 +21,14 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   setCurrentTopic,
   handleResetAll,
   streak,
+  highScores,
 }) => {
   const { user } = useAuth();
+
+  // Calculate total score for the current user
+  const totalScore = highScores
+    .filter((score) => user && score.name === (user.displayName || user.email))
+    .reduce((sum, score) => sum + score.score, 0);
 
   const handleTopicClick = async (topicName: string) => {
     const progress = userProgress[topicName];
@@ -90,6 +97,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
         <h2 className="text-3xl font-bold text-gray-800">
           Select a Topic
         </h2>
+        <div className="flex items-center bg-gradient-to-r from-blue-400 to-indigo-500 text-white px-4 py-2 rounded-full shadow-md">
+          <span className="text-lg font-semibold">Your Score: {totalScore}</span>
+        </div>
         <div className="flex items-center bg-gradient-to-r from-orange-400 to-red-500 text-white px-4 py-2 rounded-full shadow-md">
           <span className="text-lg font-semibold">Streak: {streak} days</span>
         </div>
