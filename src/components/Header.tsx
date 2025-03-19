@@ -49,6 +49,13 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-6">
             <motion.button
               whileHover={{ scale: 1.05 }}
+              onClick={() => navigate("/profile")}
+              className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+            >
+              Profile
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
               onClick={() => navigate("/leaderboard")}
               className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
             >
@@ -56,10 +63,10 @@ const Header: React.FC = () => {
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/achievements")}
               className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
             >
-              Profile
+              Achievements
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
