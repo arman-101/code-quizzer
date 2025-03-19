@@ -17,6 +17,7 @@ interface UserStat {
   name: string;
   totalScore: number;
   totalQuestions: number;
+  achievements: number;
 }
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ highScores: initialHighScores, userProgress }) => {
@@ -29,6 +30,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores: initialHighScores
     const fetchUserStats = async () => {
       try {
         // Fetch all high scores
+        console.log("Fetching highScores...");
         const highScoresCol = collection(db, "highScores");
         const highScoresSnap = await getDocs(highScoresCol);
         const scoreMap: { [userId: string]: { name: string; totalScore: number } } = {};
@@ -40,14 +42,32 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores: initialHighScores
           }
           scoreMap[userId].totalScore += data.score;
         });
+        console.log("High scores fetched:", Object.keys(scoreMap).length, "users");
 
         // Fetch all users' progress
+        console.log("Fetching users...");
         const usersCol = collection(db, "users");
         const usersSnap = await getDocs(usersCol);
         const allUserProgress: { [userId: string]: UserProgress } = {};
         usersSnap.docs.forEach((doc) => {
           allUserProgress[doc.id] = doc.data() as UserProgress;
         });
+        console.log("Users fetched:", Object.keys(allUserProgress).length, "users");
+
+        // Fetch all users' achievements
+        console.log("Fetching achievements...");
+        const achievementCounts: { [userId: string]: number } = {};
+        for (const userId of Object.keys(scoreMap)) {
+          try {
+            const achievementsCol = collection(db, "profiles", userId, "achievements");
+            const achievementsSnap = await getDocs(achievementsCol);
+            achievementCounts[userId] = achievementsSnap.docs.length;
+          } catch (error) {
+            console.warn(`Failed to fetch achievements for user ${userId}:`, error);
+            achievementCounts[userId] = 0; // Fallback to 0 if permissions deny access
+          }
+        }
+        console.log("Achievements fetched for", Object.keys(achievementCounts).length, "users");
 
         // Calculate stats for each user
         const stats: UserStat[] = Object.entries(scoreMap).map(([userId, { name, totalScore }]) => {
@@ -59,7 +79,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores: initialHighScores
             );
           }
           const displayName = user && user.uid === userId ? user.displayName || user.email || name : name;
-          return { name: displayName, totalScore, totalQuestions };
+          const achievements = achievementCounts[userId] || 0;
+          return { name: displayName, totalScore, totalQuestions, achievements };
         });
 
         // Sort by totalScore descending
@@ -102,26 +123,28 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ highScores: initialHighScores
         </motion.button>
       </div>
       <div className="bg-white p-4 rounded-lg shadow-md">
-        <div className="grid grid-cols-4 gap-2 font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-2 rounded-t-lg">
+        <div className="grid grid-cols-5 gap-2 font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-2 rounded-t-lg">
           <span>Rank</span>
           <span>Name</span>
           <span>Questions</span>
           <span>Score</span>
+          <span>Achievements</span>
         </div>
         {userStats.length > 0 ? (
           userStats.map((entry, index) => {
             const rank = entry.totalScore > 0 ? index + 1 : "N/A";
             return (
               <motion.div
-                key={entry.name + index} // Unique key with index to handle duplicate names
+                key={entry.name + index}
                 initial={{ y: 20 }}
                 animate={{ y: 0 }}
-                className="grid grid-cols-4 gap-2 p-2 border-b border-gray-200"
+                className="grid grid-cols-5 gap-2 p-2 border-b border-gray-200"
               >
                 <span className="text-gray-800 font-medium">{rank}</span>
                 <span className="text-gray-800">{entry.name}</span>
                 <span className="text-gray-800">{`${entry.totalQuestions}/${totalPossibleQuestions}`}</span>
                 <span className="text-gray-800">{entry.totalScore}</span>
+                <span className="text-gray-800">{`${entry.achievements}/10`}</span>
               </motion.div>
             );
           })
