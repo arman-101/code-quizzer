@@ -6,7 +6,6 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import Swal from "sweetalert2";
-import { topics } from "../data/questions"; // Import topics to get topic names
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -38,12 +37,10 @@ const Profile: React.FC = () => {
     setLoading(true);
 
     try {
-      // Update Firebase Auth profile
       console.log("Updating Firebase Auth profile...");
       await updateProfile(user, { displayName });
       console.log("Firebase Auth profile updated.");
 
-      // Save to Firestore profiles
       console.log("Saving to Firestore profiles...");
       await setDoc(
         doc(db, "profiles", user.uid),
@@ -52,11 +49,10 @@ const Profile: React.FC = () => {
       );
       console.log("Firestore profiles save complete.");
 
-      // Update all highScores entries for this user
       console.log("Updating highScores...");
       const highScoresQuery = query(
         collection(db, "highScores"),
-        where("name", "==", user.displayName || user.email) // Match old name
+        where("name", "==", user.displayName || user.email)
       );
       const highScoresSnap = await getDocs(highScoresQuery);
       const updatePromises = highScoresSnap.docs.map((docSnap) =>
@@ -90,28 +86,12 @@ const Profile: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-start justify-center" // Changed p-8 to p-4, items-center to items-start
+      className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-start justify-center"
     >
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full border border-gray-200">
         <h2 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
           Your Profile
         </h2>
-
-        <div className="flex justify-center mb-6">
-          {user?.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt="Profile"
-              className="w-32 h-32 rounded-full border-4 border-indigo-200 object-cover"
-            />
-          ) : (
-            <img
-              src="https://via.placeholder.com/120"
-              alt="Profile"
-              className="w-32 h-32 rounded-full border-4 border-indigo-200 object-cover"
-            />
-          )}
-        </div>
 
         <div className="mb-6">
           <label className="block text-lg font-semibold text-gray-700 mb-2">

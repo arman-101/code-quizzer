@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userProgress, setUserProgress] = useState<UserProgress>({});
-  const [highScores, setHighScores] = useState<HighScore[]>([]);
+  const [highScores, setHighScores] = useState<(HighScore & { userId: string })[]>([]);
   const [streak, setStreak] = useState(0);
 
   const loadUserData = useCallback(async () => {
@@ -35,11 +35,11 @@ const App: React.FC = () => {
 
   const loadHighScores = useCallback(async () => {
     if (!user) return;
-    const scores: HighScore[] = [];
+    const scores: (HighScore & { userId: string })[] = [];
     for (const topic of topics) {
       const highScoreDoc = await getDoc(doc(db, "highScores", `${user.uid}_${topic.name}`));
       if (highScoreDoc.exists()) {
-        scores.push(highScoreDoc.data() as HighScore);
+        scores.push({ ...highScoreDoc.data() as HighScore, userId: user.uid });
       }
     }
     setHighScores(scores);
@@ -49,7 +49,7 @@ const App: React.FC = () => {
     if (!user) return;
     const profileDocRef = doc(db, "profiles", user.uid);
     const profileDoc = await getDoc(profileDocRef);
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
 
     if (profileDoc.exists()) {
       const data = profileDoc.data();
@@ -218,7 +218,7 @@ const App: React.FC = () => {
                   setCurrentTopic={setCurrentTopic}
                   handleResetAll={handleResetAll}
                   streak={streak}
-                  highScores={highScores} // Pass highScores here
+                  highScores={highScores}
                 />
               )
             ) : (

@@ -12,7 +12,7 @@ interface TopicSelectorProps {
   setCurrentTopic: React.Dispatch<React.SetStateAction<string | null>>;
   handleResetAll: () => Promise<void>;
   streak: number;
-  highScores: { name: string; score: number; topic: string }[]; // Add highScores prop
+  highScores: { name: string; score: number; topic: string; userId: string }[]; // Updated type
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
@@ -25,9 +25,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
 }) => {
   const { user } = useAuth();
 
-  // Calculate total score for the current user
+  // Calculate total score by userId
   const totalScore = highScores
-    .filter((score) => user && score.name === (user.displayName || user.email))
+    .filter((score) => user && score.userId === user.uid)
     .reduce((sum, score) => sum + score.score, 0);
 
   const handleTopicClick = async (topicName: string) => {

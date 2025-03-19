@@ -74,13 +74,6 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-3">
-              {user.photoURL && (
-                <img
-                  src={user.photoURL}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full border-2 border-white"
-                />
-              )}
               <span className="text-lg font-medium">
                 {user.displayName || user.email}
               </span>
