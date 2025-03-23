@@ -51,9 +51,9 @@ const SignUp: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-400 to-indigo-600"
+      className="flex items-start justify-center p-4 bg-gradient-to-br from-purple-400 to-indigo-600 min-h-[calc(100vh-64px)]" // Matched SignIn style
     >
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mt-8"> {/* Matched SignIn mt-8 */}
         <Toaster />
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Sign Up</h1>
         <form onSubmit={handleSignUp} className="space-y-6">
