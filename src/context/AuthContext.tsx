@@ -12,6 +12,7 @@ import {
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean; // Add loading state
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<UserCredential>;
@@ -22,10 +23,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true); // Initialize as true until auth state resolves
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
+      setLoading(false); // Set loading to false once auth state is determined
+    }, (error) => {
+      console.error("Auth state error:", error);
+      setLoading(false); // Handle errors by stopping loading
     });
     return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
@@ -53,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loginWithEmail, signUpWithEmail, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginWithEmail, signUpWithEmail, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

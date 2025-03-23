@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom"; // Add useNavigate for routing
 import { Topic, UserProgress } from "../types";
 import Swal from "sweetalert2";
 import { doc, setDoc } from "firebase/firestore";
@@ -12,7 +13,7 @@ interface TopicSelectorProps {
   setCurrentTopic: React.Dispatch<React.SetStateAction<string | null>>;
   handleResetAll: () => Promise<void>;
   streak: number;
-  highScores: { name: string; score: number; topic: string; userId: string }[]; // Updated type
+  highScores: { name: string; score: number; topic: string; userId: string }[];
 }
 
 const TopicSelector: React.FC<TopicSelectorProps> = ({
@@ -24,6 +25,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   highScores,
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate(); // Hook to programmatically navigate
 
   // Calculate total score by userId
   const totalScore = highScores
@@ -57,9 +59,11 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
           topic: topicName,
         });
         setCurrentTopic(topicName);
+        navigate(`/quiz/${topicName}`); // Navigate to quiz route
       }
     } else {
       setCurrentTopic(topicName);
+      navigate(`/quiz/${topicName}`); // Navigate to quiz route
     }
   };
 

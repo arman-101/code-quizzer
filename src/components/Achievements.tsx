@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
-// Import SVG icons (assuming they’re in src/achievements)
 import Achievement1 from "../achievements/1.svg";
 import Achievement2 from "../achievements/2.svg";
 import Achievement3 from "../achievements/3.svg";
@@ -14,22 +14,34 @@ import Achievement8 from "../achievements/8.svg";
 import Achievement9 from "../achievements/9.svg";
 import Achievement10 from "../achievements/10.svg";
 
-const Achievements: React.FC = () => {
+interface AchievementsProps {
+  achievements: { [key: string]: boolean };
+}
+
+const Achievements: React.FC<AchievementsProps> = ({ achievements }) => {
   const navigate = useNavigate();
 
-  // Array of achievements for easier mapping
-  const achievements = [
-    Achievement1,
-    Achievement2,
-    Achievement3,
-    Achievement4,
-    Achievement5,
-    Achievement6,
-    Achievement7,
-    Achievement8,
-    Achievement9,
-    Achievement10,
+  const achievementDetails = [
+    { name: "First Step", svg: Achievement1, description: "Complete 1 topic" },
+    { name: "Triple Threat", svg: Achievement2, description: "Complete 3 topics" },
+    { name: "Master Coder", svg: Achievement3, description: "Complete all 9 topics" },
+    { name: "Century Scorer", svg: Achievement4, description: "Reach a total score of 100" },
+    { name: "Half Millennium", svg: Achievement5, description: "Reach a total score of 500" },
+    { name: "Code Legend", svg: Achievement6, description: "Reach a total score of 1000" },
+    { name: "Double Duty", svg: Achievement7, description: "Achieve a 2-day login streak" },
+    { name: "Five Alive", svg: Achievement8, description: "Achieve a 5-day login streak" },
+    { name: "Decade Devotion", svg: Achievement9, description: "Achieve a 10-day login streak" },
+    { name: "Top Coder", svg: Achievement10, description: "Reach #1 on the leaderboard" },
   ];
+
+  const handleAchievementClick = (name: string, completed: boolean, description: string) => {
+    Swal.fire({
+      title: name,
+      text: `${completed ? "Completed!" : "Not yet completed."}\n${description}`,
+      icon: completed ? "success" : "info",
+      confirmButtonColor: completed ? "#3085d6" : "#d33",
+    });
+  };
 
   return (
     <motion.div
@@ -49,39 +61,84 @@ const Achievements: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        {/* 3x3 Grid for Achievements 1-9 */}
         <div className="grid grid-cols-3 gap-6 mb-6">
-          {achievements.slice(0, 9).map((AchievementIcon, index) => (
-            <motion.div
-              key={index}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex justify-center items-center bg-gray-100 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
-            >
-              <img
-                src={AchievementIcon}
-                alt={`Achievement ${index + 1}`}
-                className="w-16 h-16"
-              />
-            </motion.div>
-          ))}
+          {achievementDetails.slice(0, 9).map((achievement, index) => {
+            const completed = achievements[achievement.name];
+            return (
+              <motion.div
+                key={index}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative flex justify-center items-center bg-gray-100 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleAchievementClick(achievement.name, completed, achievement.description)}
+              >
+                <img
+                  src={achievement.svg}
+                  alt={achievement.name}
+                  className={`w-16 h-16 ${completed ? "" : "opacity-50"}`}
+                />
+                {completed && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-30 rounded-lg">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Centered 10th Achievement */}
         <div className="flex justify-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.9 }}
-            className="flex justify-center items-center bg-gray-100 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
-          >
-            <img
-              src={Achievement10}
-              alt="Achievement 10"
-              className="w-16 h-16"
-            />
-          </motion.div>
+          {achievementDetails.slice(9).map((achievement, index) => {
+            const completed = achievements[achievement.name];
+            return (
+              <motion.div
+                key={index}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.9 }}
+                className="relative flex justify-center items-center bg-gray-100 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleAchievementClick(achievement.name, completed, achievement.description)}
+              >
+                <img
+                  src={achievement.svg}
+                  alt={achievement.name}
+                  className={`w-16 h-16 ${completed ? "" : "opacity-50"}`}
+                />
+                {completed && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-30 rounded-lg">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </motion.div>
