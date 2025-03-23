@@ -82,17 +82,18 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 flex items-start justify-center"
-    >
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full border border-gray-200">
-        <h2 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
-          Your Profile
-        </h2>
-
+    <div className="p-6 max-w-3xl mx-auto">
+      <div className="flex justify-between items-center mb-8 px-6">
+        <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          onClick={() => navigate("/")}
+          className="bg-gray-500 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition"
+        >
+          Back to Home
+        </motion.button>
+      </div>
+      <div className="bg-white rounded-lg shadow-md p-6">
         <div className="mb-6">
           <label className="block text-lg font-semibold text-gray-700 mb-2">
             Display Name
@@ -119,21 +120,13 @@ const Profile: React.FC = () => {
           />
         </div>
 
-        <div className="flex justify-center space-x-6">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/")}
-            className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-full shadow-md hover:from-gray-600 hover:to-gray-700 transition-all duration-300 text-lg font-semibold"
-          >
-            Back to Home
-          </motion.button>
+        <div className="flex justify-center">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSave}
             disabled={loading}
-            className={`bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-8 py-3 rounded-full shadow-md hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 text-lg font-semibold ${
+            className={`bg-indigo-500 text-white px-8 py-3 rounded-full hover:bg-indigo-600 transition font-semibold ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -141,7 +134,7 @@ const Profile: React.FC = () => {
           </motion.button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

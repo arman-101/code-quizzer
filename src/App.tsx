@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "./context/AuthContext";
-import { auth, db } from "./firebase"; // Added auth import
+import { auth, db } from "./firebase";
 import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { topics } from "./data/questions";
 import { HighScore, UserProgress } from "./types";
@@ -54,7 +55,7 @@ const App: React.FC = () => {
   }, [user, loading, location, navigate]);
 
   const loadUserData = useCallback(async () => {
-    if (!user || !auth.currentUser) return; // Double-check auth state
+    if (!user || !auth.currentUser) return;
     console.log("Loading user data for:", user.uid);
     try {
       const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -67,7 +68,7 @@ const App: React.FC = () => {
   }, [user]);
 
   const loadHighScores = useCallback(async () => {
-    if (!user || !auth.currentUser) return; // Double-check auth state
+    if (!user || !auth.currentUser) return;
     console.log("Loading high scores for:", user.uid);
     try {
       const highScoresSnap = await getDocs(collection(db, "highScores"));
@@ -82,7 +83,7 @@ const App: React.FC = () => {
   }, [user]);
 
   const loadAchievements = useCallback(async (): Promise<AchievementsState> => {
-    if (!user || !auth.currentUser) return { completed: {}, shownPopups: {} }; // Double-check auth state
+    if (!user || !auth.currentUser) return { completed: {}, shownPopups: {} };
     console.log("Loading achievements for:", user.uid);
     try {
       const achievementsDoc = await getDoc(doc(db, "profiles", user.uid, "achievements", "progress"));
@@ -124,7 +125,7 @@ const App: React.FC = () => {
   }, [user]);
 
   const checkAchievements = useCallback(async () => {
-    if (!user || !auth.currentUser) return; // Double-check auth state
+    if (!user || !auth.currentUser) return;
     console.log("Checking achievements for:", user.uid);
     const currentAchievements = await loadAchievements();
     const completedTopics = Object.keys(userProgress).filter(
@@ -182,7 +183,7 @@ const App: React.FC = () => {
   }, [user, userProgress, highScores, streak, loadAchievements]);
 
   const updateStreak = useCallback(async () => {
-    if (!user || !auth.currentUser) return; // Double-check auth state
+    if (!user || !auth.currentUser) return;
     console.log("Updating streak for:", user.uid);
     const profileDocRef = doc(db, "profiles", user.uid);
     try {
@@ -234,7 +235,7 @@ const App: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (loading || !user || !auth.currentUser) { // Added auth.currentUser check
+    if (loading || !user || !auth.currentUser) {
       console.log("Skipping user data effect: loading=", loading, "user=", user, "auth.currentUser=", auth.currentUser);
       setUserProgress({});
       setHighScores([]);
@@ -347,73 +348,197 @@ const App: React.FC = () => {
       <Header />
       <main className="flex-grow">
         <Routes>
-          <Route path="/" element={user ? <TopicSelector
-            topics={topics}
-            userProgress={userProgress}
-            setCurrentTopic={setCurrentTopic}
-            handleResetAll={handleResetAll}
-            streak={streak}
-            highScores={highScores}
-          /> : <SignIn />} />
-          <Route path="/quiz/:topicName" element={user && currentTopic && currentTopicData ? (
-            <Quiz
-              topic={currentTopic}
-              questions={currentTopicData.questions}
-              onComplete={handleQuizComplete}
-              initialProgress={initialProgress}
-              initialElapsed={initialElapsed}
-              initialScore={score}
-              onQuit={handleQuizQuit}
-              elapsedTime={elapsedTime}
-              setElapsedTime={setElapsedTime}
-              score={score}
-              setScore={setScore}
-              currentQuestion={currentQuestion}
-              setCurrentQuestion={setCurrentQuestion}
-              userProgress={userProgress}
-              topics={topics}
-              onEndScreenNavigation={() => setCurrentTopic(null)}
-            />
-          ) : user ? (
-            <TopicSelector
-              topics={topics}
-              userProgress={userProgress}
-              setCurrentTopic={setCurrentTopic}
-              handleResetAll={handleResetAll}
-              streak={streak}
-              highScores={highScores}
-            />
-          ) : (
-            <SignIn />
-          )} />
-          <Route path="/leaderboard" element={user ? <Leaderboard highScores={highScores} userProgress={userProgress} /> : <SignIn />} />
-          <Route path="/profile" element={user ? <Profile /> : <SignIn />} />
-          <Route path="/achievements" element={user ? <Achievements achievements={achievements.completed} /> : <SignIn />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/signin" element={!user ? <SignIn /> : <TopicSelector
-            topics={topics}
-            userProgress={userProgress}
-            setCurrentTopic={setCurrentTopic}
-            handleResetAll={handleResetAll}
-            streak={streak}
-            highScores={highScores}
-          />} />
-          <Route path="/signup" element={!user ? <SignUp /> : <TopicSelector
-            topics={topics}
-            userProgress={userProgress}
-            setCurrentTopic={setCurrentTopic}
-            handleResetAll={handleResetAll}
-            streak={streak}
-            highScores={highScores}
-          />} />
-          <Route path="*" element={user ? <TopicSelector
-            topics={topics}
-            userProgress={userProgress}
-            setCurrentTopic={setCurrentTopic}
-            handleResetAll={handleResetAll}
-            streak={streak}
-            highScores={highScores}
-          /> : <SignIn />} />
+          <Route
+            path="/"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user ? (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                ) : (
+                  <SignIn />
+                )}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/quiz/:topicName"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user && currentTopic && currentTopicData ? (
+                  <Quiz
+                    topic={currentTopic}
+                    questions={currentTopicData.questions}
+                    onComplete={handleQuizComplete}
+                    initialProgress={initialProgress}
+                    initialElapsed={initialElapsed}
+                    initialScore={score}
+                    onQuit={handleQuizQuit}
+                    elapsedTime={elapsedTime}
+                    setElapsedTime={setElapsedTime}
+                    score={score}
+                    setScore={setScore}
+                    currentQuestion={currentQuestion}
+                    setCurrentQuestion={setCurrentQuestion}
+                    userProgress={userProgress}
+                    topics={topics}
+                    onEndScreenNavigation={() => setCurrentTopic(null)}
+                  />
+                ) : user ? (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                ) : (
+                  <SignIn />
+                )}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user ? <Leaderboard highScores={highScores} userProgress={userProgress} /> : <SignIn />}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user ? <Profile /> : <SignIn />}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/achievements"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user ? <Achievements achievements={achievements.completed} /> : <SignIn />}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/faq"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <FAQ />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/signin"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {!user ? (
+                  <SignIn />
+                ) : (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                )}
+              </motion.div>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {!user ? (
+                  <SignUp />
+                ) : (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                )}
+              </motion.div>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {user ? (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                ) : (
+                  <SignIn />
+                )}
+              </motion.div>
+            }
+          />
         </Routes>
       </main>
       <Footer />
