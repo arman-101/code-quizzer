@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom"; // Add useNavigate for routing
+import { useNavigate } from "react-router-dom";
 import { Topic, UserProgress } from "../types";
 import Swal from "sweetalert2";
 import { doc, setDoc } from "firebase/firestore";
@@ -25,7 +25,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   highScores,
 }) => {
   const { user } = useAuth();
-  const navigate = useNavigate(); // Hook to programmatically navigate
+  const navigate = useNavigate();
 
   // Calculate total score by userId
   const totalScore = highScores
@@ -59,17 +59,17 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
           topic: topicName,
         });
         setCurrentTopic(topicName);
-        navigate(`/quiz/${topicName}`); // Navigate to quiz route
+        navigate(`/quiz/${topicName}`);
       }
     } else {
       setCurrentTopic(topicName);
-      navigate(`/quiz/${topicName}`); // Navigate to quiz route
+      navigate(`/quiz/${topicName}`);
     }
   };
 
   const resetProgress = () => {
     Swal.fire({
-      title: "Reset All Progress?",
+      title: "Reset My Progress?",
       text: "This will reset all your quiz progress and scores!",
       icon: "warning",
       showCancelButton: true,
@@ -95,9 +95,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 max-w-4xl mx-auto"
+      className="p-6 max-w-4xl mx-auto mt-6"
     >
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-8"> {/* Increased from mb-4 to mb-8 */}
         <h2 className="text-3xl font-bold text-gray-800">
           Select a Topic
         </h2>
@@ -147,9 +147,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       <motion.button
         whileHover={{ scale: 1.05 }}
         onClick={resetProgress}
-        className="mt-6 w-full max-w-xs mx-auto block bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition font-semibold"
+        className="mt-12 w-full max-w-48 mx-auto mb-6 block bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition font-semibold"
       >
-        Reset All Progress
+        Reset My Progress
       </motion.button>
     </motion.div>
   );
