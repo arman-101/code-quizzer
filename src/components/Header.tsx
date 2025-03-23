@@ -1,16 +1,67 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import { db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 import Swal from "sweetalert2";
+
+// Import new icons
+import Icon1 from "../assets/icons/1cat.png";
+import Icon2 from "../assets/icons/2panda.png";
+import Icon3 from "../assets/icons/3bear.png";
+import Icon4 from "../assets/icons/4rabbit.png";
+import Icon5 from "../assets/icons/5meerkat.png";
+import Icon6 from "../assets/icons/6chicken.png";
+import Icon7 from "../assets/icons/7fox.png";
+import Icon8 from "../assets/icons/8dog.png";
+import Icon9 from "../assets/icons/9gorilla.png";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [selectedIcon, setSelectedIcon] = useState<string>("");
+
+  const iconOptions = [
+    { value: "1cat", src: Icon1 },
+    { value: "2panda", src: Icon2 },
+    { value: "3bear", src: Icon3 },
+    { value: "4rabbit", src: Icon4 },
+    { value: "5meerkat", src: Icon5 },
+    { value: "6chicken", src: Icon6 },
+    { value: "7fox", src: Icon7 },
+    { value: "8dog", src: Icon8 },
+    { value: "9gorilla", src: Icon9 },
+  ];
+
+  useEffect(() => {
+    if (user) {
+      const fetchIcon = async () => {
+        try {
+          const profileDoc = await getDoc(doc(db, "profiles", user.uid));
+          if (profileDoc.exists()) {
+            setSelectedIcon(profileDoc.data().icon || "1cat");
+          } else {
+            setSelectedIcon("");
+          }
+        } catch (error) {
+          console.error("Error fetching icon:", error);
+        }
+      };
+      fetchIcon();
+    }
+
+    const handleIconUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ icon: string }>;
+      setSelectedIcon(customEvent.detail.icon);
+    };
+    window.addEventListener("iconUpdated", handleIconUpdate);
+    return () => window.removeEventListener("iconUpdated", handleIconUpdate);
+  }, [user]);
 
   const handleLogout = async () => {
     try {
-      await logout(); // Use AuthContext's logout
+      await logout();
       await Swal.fire({
         title: "Logged Out",
         text: "You have successfully logged out.",
@@ -81,6 +132,13 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-3">
+              {selectedIcon && (
+                <img
+                  src={iconOptions.find((opt) => opt.value === selectedIcon)?.src}
+                  alt="User Icon"
+                  className="w-7 h-7 mr-2" // 1.5x original ~27px
+                />
+              )}
               <span className="text-lg font-medium">
                 {user.displayName || user.email}
               </span>
