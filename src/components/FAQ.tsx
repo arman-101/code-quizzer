@@ -29,6 +29,10 @@ const FAQ: React.FC = () => {
           <h3 className="font-semibold text-lg text-gray-800">What happens to my data?</h3>
           <p className="text-gray-600">We only use your data to display it on the leaderboard.</p>
         </motion.div>
+        <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
+          <h3 className="font-semibold text-lg text-gray-800">How is the leaderboard ranked?</h3>
+          <p className="text-gray-600">The leaderboard is ranked in order of score.</p>
+        </motion.div>
       </div>
     </motion.div>
   );
