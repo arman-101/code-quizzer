@@ -10,8 +10,8 @@ const Header: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      Swal.fire({
+      await logout(); // Use AuthContext's logout
+      await Swal.fire({
         title: "Logged Out",
         text: "You have successfully logged out.",
         icon: "success",
@@ -19,7 +19,7 @@ const Header: React.FC = () => {
         timer: 1500,
         timerProgressBar: true,
       });
-      navigate("/signin");
+      navigate("/signin", { replace: true });
     } catch (error) {
       console.error("Error logging out:", error);
       Swal.fire({
@@ -94,20 +94,22 @@ const Header: React.FC = () => {
             </div>
           ) : (
             <>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                onClick={() => navigate("/signin")}
-                className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                onClick={() => navigate("/signup")}
-                className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
-              >
-                Sign Up
-              </motion.button>
+              <a href="/signin" className="text-indigo-500 hover:underline">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+                >
+                  Sign In
+                </motion.button>
+              </a>
+              <a href="/signup" className="text-indigo-500 hover:underline">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white text-indigo-600 px-4 py-2 rounded-full font-semibold hover:bg-indigo-100 transition"
+                >
+                  Sign Up
+                </motion.button>
+              </a>
             </>
           )}
         </div>

@@ -24,7 +24,7 @@ const SignIn: React.FC = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      navigate("/");
+      navigate("/"); // Rely on App.tsx to enforce
     } catch (error) {
       toast.error("Failed to sign in. Check your credentials.");
     }
@@ -41,7 +41,7 @@ const SignIn: React.FC = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      navigate("/");
+      navigate("/"); // Rely on App.tsx to enforce
     } catch (error) {
       toast.error("Failed to sign in with Google.");
     }
