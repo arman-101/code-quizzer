@@ -13,6 +13,7 @@ import FAQ from "./components/FAQ";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
+import Footer from "./components/Footer"; // Import the new Footer component
 import Swal from "sweetalert2";
 
 const App: React.FC = () => {
@@ -185,65 +186,68 @@ const App: React.FC = () => {
   const initialElapsed = currentTopic ? userProgress[currentTopic]?.elapsed || 0 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100"> {/* Updated to flex column */}
       <Header />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            user ? (
-              currentTopic && currentTopicData ? (
-                <Quiz
-                  topic={currentTopic}
-                  questions={currentTopicData.questions}
-                  onComplete={handleQuizComplete}
-                  initialProgress={initialProgress}
-                  initialElapsed={initialElapsed}
-                  initialScore={score}
-                  onQuit={handleQuizQuit}
-                  elapsedTime={elapsedTime}
-                  setElapsedTime={setElapsedTime}
-                  score={score}
-                  setScore={setScore}
-                  currentQuestion={currentQuestion}
-                  setCurrentQuestion={setCurrentQuestion}
-                  userProgress={userProgress}
-                  topics={topics}
-                  onEndScreenNavigation={() => setCurrentTopic(null)}
-                />
+      <main className="flex-grow"> {/* Main content takes remaining space */}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              user ? (
+                currentTopic && currentTopicData ? (
+                  <Quiz
+                    topic={currentTopic}
+                    questions={currentTopicData.questions}
+                    onComplete={handleQuizComplete}
+                    initialProgress={initialProgress}
+                    initialElapsed={initialElapsed}
+                    initialScore={score}
+                    onQuit={handleQuizQuit}
+                    elapsedTime={elapsedTime}
+                    setElapsedTime={setElapsedTime}
+                    score={score}
+                    setScore={setScore}
+                    currentQuestion={currentQuestion}
+                    setCurrentQuestion={setCurrentQuestion}
+                    userProgress={userProgress}
+                    topics={topics}
+                    onEndScreenNavigation={() => setCurrentTopic(null)}
+                  />
+                ) : (
+                  <TopicSelector
+                    topics={topics}
+                    userProgress={userProgress}
+                    setCurrentTopic={setCurrentTopic}
+                    handleResetAll={handleResetAll}
+                    streak={streak}
+                    highScores={highScores}
+                  />
+                )
               ) : (
-                <TopicSelector
-                  topics={topics}
-                  userProgress={userProgress}
-                  setCurrentTopic={setCurrentTopic}
-                  handleResetAll={handleResetAll}
-                  streak={streak}
-                  highScores={highScores}
-                />
+                <Navigate to="/signin" />
               )
-            ) : (
-              <Navigate to="/signin" />
-            )
-          }
-        />
-        <Route
-          path="/leaderboard"
-          element={
-            user ? (
-              <Leaderboard highScores={highScores} userProgress={userProgress} />
-            ) : (
-              <Navigate to="/signin" />
-            )
-          }
-        />
-        <Route
-          path="/profile"
-          element={user ? <Profile /> : <Navigate to="/signin" />}
-        />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/signin" element={!user ? <SignIn /> : <Navigate to="/" />} />
-        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
-      </Routes>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              user ? (
+                <Leaderboard highScores={highScores} userProgress={userProgress} />
+              ) : (
+                <Navigate to="/signin" />
+              )
+            }
+          />
+          <Route
+            path="/profile"
+            element={user ? <Profile /> : <Navigate to="/signin" />}
+          />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/signin" element={!user ? <SignIn /> : <Navigate to="/" />} />
+          <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
+        </Routes>
+      </main>
+      <Footer /> {/* Add Footer here */}
     </div>
   );
 };

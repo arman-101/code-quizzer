@@ -86,7 +86,7 @@ const Profile: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-start justify-center"
+      className="p-4 max-w-4xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 flex items-start justify-center"
     >
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full border border-gray-200">
         <h2 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
