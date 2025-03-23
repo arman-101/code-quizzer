@@ -13,7 +13,8 @@ import FAQ from "./components/FAQ";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
-import Footer from "./components/Footer"; // Import the new Footer component
+import Achievements from "./components/Achievements"; // Import the new component
+import Footer from "./components/Footer";
 import Swal from "sweetalert2";
 
 const App: React.FC = () => {
@@ -186,9 +187,9 @@ const App: React.FC = () => {
   const initialElapsed = currentTopic ? userProgress[currentTopic]?.elapsed || 0 : 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100"> {/* Updated to flex column */}
+    <div className="flex flex-col min-h-screen bg-gray-100">
       <Header />
-      <main className="flex-grow"> {/* Main content takes remaining space */}
+      <main className="flex-grow">
         <Routes>
           <Route
             path="/"
@@ -242,12 +243,16 @@ const App: React.FC = () => {
             path="/profile"
             element={user ? <Profile /> : <Navigate to="/signin" />}
           />
+          <Route
+            path="/achievements"
+            element={user ? <Achievements /> : <Navigate to="/signin" />}
+          />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={!user ? <SignIn /> : <Navigate to="/" />} />
           <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
         </Routes>
       </main>
-      <Footer /> {/* Add Footer here */}
+      <Footer />
     </div>
   );
 };
