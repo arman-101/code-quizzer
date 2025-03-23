@@ -23,7 +23,7 @@ interface AchievementsState {
 }
 
 const App: React.FC = () => {
-  const { user, loading } = useAuth(); // Assume useAuth provides a loading state
+  const { user, loading } = useAuth();
   const location = useLocation();
   const [currentTopic, setCurrentTopic] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -188,7 +188,6 @@ const App: React.FC = () => {
     await checkAchievements();
   }, [user, checkAchievements]);
 
-  // Set currentTopic based on URL
   useEffect(() => {
     const pathParts = location.pathname.split('/');
     const topicFromUrl = pathParts[2];
@@ -230,11 +229,12 @@ const App: React.FC = () => {
       name: user.displayName || user.email || "",
       score: newScore,
       topic: currentTopic,
+      completed: updatedProgress[currentTopic].completed, // Add completed count
     });
     await loadUserData();
     await loadHighScores();
     await checkAchievements();
-    setCurrentTopic(null); // Reset to navigate back to /
+    setCurrentTopic(null);
   };
 
   const handleQuizQuit = async (newElapsed: number, newScore: number, newCompleted: number) => {
@@ -254,6 +254,7 @@ const App: React.FC = () => {
       name: user.displayName || user.email || "",
       score: newScore,
       topic: currentTopic,
+      completed: newCompleted, // Add completed count
     });
     await loadUserData();
     await loadHighScores();
@@ -272,6 +273,7 @@ const App: React.FC = () => {
         name: user.displayName || user.email || "",
         score: 0,
         topic: topic.name,
+        completed: 0, // Reset completed to 0
       });
     }
     setUserProgress({});
@@ -287,9 +289,8 @@ const App: React.FC = () => {
   const initialProgress = currentTopic ? userProgress[currentTopic]?.completed || 0 : 0;
   const initialElapsed = currentTopic ? userProgress[currentTopic]?.elapsed || 0 : 0;
 
-  // Wait for auth to settle before rendering routes
   if (loading) {
-    return <div>Loading...</div>; // Or a proper loading component
+    return <div>Loading...</div>;
   }
 
   return (
@@ -310,7 +311,7 @@ const App: React.FC = () => {
                   highScores={highScores}
                 />
               ) : (
-                <Navigate to="/signin" state={{ from: location }} /> // Preserve intended route
+                <Navigate to="/signin" state={{ from: location }} />
               )
             }
           />
