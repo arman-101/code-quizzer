@@ -90,7 +90,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
           <span className="text-lg font-semibold">Streak: {streak} days</span>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-8"> {/* Changed from gap-4 to gap-8 */}
         {topics.map((topic) => {
           const progress = userProgress[topic.name];
           const completed = progress?.completed || 0;
