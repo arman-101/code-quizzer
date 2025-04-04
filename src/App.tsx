@@ -30,7 +30,6 @@ const App: React.FC = () => {
   const [currentTopic, setCurrentTopic] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [score, setScore] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userProgress, setUserProgress] = useState<UserProgress>({});
   const [highScores, setHighScores] = useState<(HighScore & { userId: string })[]>([]);
   const [streak, setStreak] = useState(0);
@@ -229,8 +228,12 @@ const App: React.FC = () => {
     const topicFromUrl = pathParts[2];
     if (pathParts[1] === "quiz" && topicFromUrl && topics.some(t => t.name === topicFromUrl)) {
       setCurrentTopic(topicFromUrl);
+      setScore(0); // Reset score for new topic
+      setElapsedTime(0); // Reset elapsed time for new topic
     } else if (pathParts[1] !== "quiz") {
       setCurrentTopic(null);
+      setScore(0);
+      setElapsedTime(0);
     }
   }, [location.pathname]);
 
@@ -273,7 +276,7 @@ const App: React.FC = () => {
       await loadUserData();
       await loadHighScores();
       await checkAchievements();
-      setCurrentTopic(null);
+      // No setCurrentTopic(null) here; Quiz.tsx handles navigation
     } catch (error) {
       console.error("Error in handleQuizComplete:", error);
     }
@@ -304,7 +307,6 @@ const App: React.FC = () => {
       setCurrentTopic(null);
       setElapsedTime(0);
       setScore(0);
-      setCurrentQuestion(0);
       await checkAchievements();
     } catch (error) {
       console.error("Error in handleQuizQuit:", error);
@@ -327,7 +329,6 @@ const App: React.FC = () => {
       setCurrentTopic(null);
       setElapsedTime(0);
       setScore(0);
-      setCurrentQuestion(0);
       await loadHighScores();
       await checkAchievements();
     } catch (error) {
@@ -394,8 +395,8 @@ const App: React.FC = () => {
                     setElapsedTime={setElapsedTime}
                     score={score}
                     setScore={setScore}
-                    currentQuestion={currentQuestion}
-                    setCurrentQuestion={setCurrentQuestion}
+                    currentQuestion={initialProgress} // Use initialProgress directly
+                    setCurrentQuestion={() => {}} // No-op since managed in Quiz.tsx
                     userProgress={userProgress}
                     topics={topics}
                     onEndScreenNavigation={() => setCurrentTopic(null)}

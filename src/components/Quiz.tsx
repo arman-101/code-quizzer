@@ -17,8 +17,8 @@ interface QuizProps {
   setElapsedTime: (time: number) => void;
   score: number;
   setScore: (score: number) => void;
-  currentQuestion: number;
-  setCurrentQuestion: (question: number) => void;
+  currentQuestion: number; // Still passed but used as initial value
+  setCurrentQuestion: (question: number) => void; // No-op in App.tsx
   userProgress: UserProgress;
   topics: Topic[];
   onEndScreenNavigation: () => void;
@@ -42,8 +42,7 @@ const Quiz: React.FC<QuizProps> = ({
   setElapsedTime,
   score,
   setScore,
-  currentQuestion,
-  setCurrentQuestion,
+  currentQuestion: initialCurrentQuestion, // Rename to avoid confusion
   userProgress,
   topics,
   onEndScreenNavigation,
@@ -54,6 +53,7 @@ const Quiz: React.FC<QuizProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
   const [answerResults, setAnswerResults] = useState<AnswerResult[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState(initialProgress); // Local state, initialized with initialProgress
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -154,6 +154,11 @@ const Quiz: React.FC<QuizProps> = ({
     }
   };
 
+  const handleGoHome = () => {
+    onEndScreenNavigation();
+    navigate("/");
+  };
+
   const learningResources: { [key: string]: { title: string; url: string }[] } = {
     variables: [
       { title: "MDN Web Docs: Variables", url: "https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps/Variables" },
@@ -200,7 +205,6 @@ const Quiz: React.FC<QuizProps> = ({
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  // All rendering logic moved inside the component
   if (isCompleted) {
     const maxScore = questions.reduce(
       (sum, q) => sum + (q.difficulty <= 10 ? 10 : q.difficulty <= 20 ? 20 : 30),
@@ -333,7 +337,7 @@ const Quiz: React.FC<QuizProps> = ({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onEndScreenNavigation}
+              onClick={handleGoHome}
               className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-8 py-3 rounded-full shadow-md hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 text-lg font-semibold"
             >
               Back to Home
