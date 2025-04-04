@@ -18,16 +18,20 @@ import Icon7 from "../assets/icons/7fox.png";
 import Icon8 from "../assets/icons/8dog.png";
 import Icon9 from "../assets/icons/9gorilla.png";
 
-const Profile: React.FC = () => {
+interface ProfileProps {
+  handleResetAll: () => Promise<void>; // Added prop
+}
+
+const Profile: React.FC<ProfileProps> = ({ handleResetAll }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [bio, setBio] = useState("");
-  const [selectedIcon, setSelectedIcon] = useState<string>(""); // Default to no icon
+  const [selectedIcon, setSelectedIcon] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   const iconOptions = [
-    { value: "", src: null, name: "None" }, // No icon option
+    { value: "", src: null, name: "None" },
     { value: "1cat", src: Icon1, name: "Cat" },
     { value: "2panda", src: Icon2, name: "Panda" },
     { value: "3bear", src: Icon3, name: "Bear" },
@@ -49,9 +53,9 @@ const Profile: React.FC = () => {
             const data = profileDoc.data();
             setBio(data.bio || "");
             setDisplayName(data.displayName || user.displayName || "");
-            setSelectedIcon(data.icon || "1cat"); // Default to "1cat" if set, otherwise empty
+            setSelectedIcon(data.icon || "1cat");
           } else {
-            setSelectedIcon(""); // New profile, no icon
+            setSelectedIcon("");
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
@@ -104,6 +108,23 @@ const Profile: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetProgress = () => {
+    Swal.fire({
+      title: "Reset My Progress?",
+      text: "This will reset all your quiz progress and scores!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, reset it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleResetAll();
+        Swal.fire("Reset!", "Your progress has been reset.", "success");
+      }
+    });
   };
 
   const handleNextIcon = () => {
@@ -195,7 +216,7 @@ const Profile: React.FC = () => {
           />
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center space-y-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -206,6 +227,13 @@ const Profile: React.FC = () => {
             }`}
           >
             {loading ? "Saving..." : "Save Profile"}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={handleResetProgress}
+            className="w-full max-w-48 bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition font-semibold"
+          >
+            Reset My Progress
           </motion.button>
         </div>
       </div>

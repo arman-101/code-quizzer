@@ -20,7 +20,6 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   topics,
   userProgress,
   setCurrentTopic,
-  handleResetAll,
   streak,
   highScores,
 }) => {
@@ -67,23 +66,6 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
     }
   };
 
-  const resetProgress = () => {
-    Swal.fire({
-      title: "Reset My Progress?",
-      text: "This will reset all your quiz progress and scores!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, reset it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        handleResetAll();
-        Swal.fire("Reset!", "Your progress has been reset.", "success");
-      }
-    });
-  };
-
   const capitalizeTopic = (topicName: string) =>
     topicName
       .replace("_", " ")
@@ -97,7 +79,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
       animate={{ opacity: 1 }}
       className="p-6 max-w-4xl mx-auto mt-6"
     >
-      <div className="flex justify-between items-center mb-8"> {/* Increased from mb-4 to mb-8 */}
+      <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800">
           Select a Topic
         </h2>
@@ -144,13 +126,6 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
           );
         })}
       </div>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        onClick={resetProgress}
-        className="mt-12 w-full max-w-48 mx-auto mb-6 block bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition font-semibold"
-      >
-        Reset My Progress
-      </motion.button>
     </motion.div>
   );
 };

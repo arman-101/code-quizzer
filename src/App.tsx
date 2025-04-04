@@ -228,8 +228,8 @@ const App: React.FC = () => {
     const topicFromUrl = pathParts[2];
     if (pathParts[1] === "quiz" && topicFromUrl && topics.some(t => t.name === topicFromUrl)) {
       setCurrentTopic(topicFromUrl);
-      setScore(0); // Reset score for new topic
-      setElapsedTime(0); // Reset elapsed time for new topic
+      setScore(0);
+      setElapsedTime(0);
     } else if (pathParts[1] !== "quiz") {
       setCurrentTopic(null);
       setScore(0);
@@ -276,7 +276,6 @@ const App: React.FC = () => {
       await loadUserData();
       await loadHighScores();
       await checkAchievements();
-      // No setCurrentTopic(null) here; Quiz.tsx handles navigation
     } catch (error) {
       console.error("Error in handleQuizComplete:", error);
     }
@@ -395,8 +394,8 @@ const App: React.FC = () => {
                     setElapsedTime={setElapsedTime}
                     score={score}
                     setScore={setScore}
-                    currentQuestion={initialProgress} // Use initialProgress directly
-                    setCurrentQuestion={() => {}} // No-op since managed in Quiz.tsx
+                    currentQuestion={initialProgress}
+                    setCurrentQuestion={() => {}}
                     userProgress={userProgress}
                     topics={topics}
                     onEndScreenNavigation={() => setCurrentTopic(null)}
@@ -438,7 +437,7 @@ const App: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                {user ? <Profile /> : <SignIn />}
+                {user ? <Profile handleResetAll={handleResetAll} /> : <SignIn />}
               </motion.div>
             }
           />
