@@ -8,17 +8,26 @@ import { FaCheckCircle, FaTimesCircle, FaBookOpen } from "react-icons/fa";
 interface QuizProps {
   topic: string;
   questions: Question[];
-  onComplete: (score: number, time: string) => void;
+  onComplete: (
+    score: number,
+    time: string,
+    answerResults: { question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }[]
+  ) => void;
   initialProgress: number;
   initialElapsed: number;
   initialScore: number;
-  onQuit: (elapsed: number, score: number, completed: number) => void;
+  onQuit: (
+    elapsed: number,
+    score: number,
+    completed: number,
+    answerResults: { question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }[]
+  ) => void;
   elapsedTime: number;
   setElapsedTime: (time: number) => void;
   score: number;
   setScore: (score: number) => void;
-  currentQuestion: number; // Still passed but used as initial value
-  setCurrentQuestion: (question: number) => void; // No-op in App.tsx
+  currentQuestion: number;
+  setCurrentQuestion: (question: number) => void;
   userProgress: UserProgress;
   topics: Topic[];
   onEndScreenNavigation: () => void;
@@ -37,23 +46,21 @@ const Quiz: React.FC<QuizProps> = ({
   onComplete,
   initialProgress,
   initialElapsed,
+  initialScore,
   onQuit,
-  elapsedTime,
-  setElapsedTime,
-  score,
-  setScore,
-  currentQuestion: initialCurrentQuestion, // Rename to avoid confusion
   userProgress,
   topics,
   onEndScreenNavigation,
 }) => {
-  const [startTime, setStartTime] = useState(Date.now() - initialElapsed * 1000);
+  const [startTime] = useState(Date.now() - initialElapsed * 1000);
+  const [elapsedTime, setElapsedTime] = useState(initialElapsed);
   const [buttonsEnabled, setButtonsEnabled] = useState(true);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
-  const [answerResults, setAnswerResults] = useState<AnswerResult[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState(initialProgress); // Local state, initialized with initialProgress
+  const [answerResults, setAnswerResults] = useState<AnswerResult[]>(userProgress[topic]?.answerResults || []);
+  const [currentQuestion, setCurrentQuestion] = useState(initialProgress);
+  const [score, setScore] = useState(initialScore);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,7 +69,7 @@ const Quiz: React.FC<QuizProps> = ({
     }, 1000);
     setTimerId(id);
     return () => clearInterval(id);
-  }, [startTime, setElapsedTime]);
+  }, [startTime]);
 
   useEffect(() => {
     if (isCompleted && timerId) {
@@ -78,15 +85,14 @@ const Quiz: React.FC<QuizProps> = ({
     const isCorrect = selected === question.correct;
     const points = isCorrect ? (question.difficulty <= 10 ? 10 : question.difficulty <= 20 ? 20 : 30) : 0;
 
-    setAnswerResults((prev) => [
-      ...prev,
-      {
-        question: question.question,
-        userAnswer: selected,
-        correctAnswer: question.correct,
-        isCorrect,
-      },
-    ]);
+    const newAnswerResult = {
+      question: question.question,
+      userAnswer: selected,
+      correctAnswer: question.correct,
+      isCorrect,
+    };
+
+    setAnswerResults((prev) => [...prev, newAnswerResult]);
 
     Swal.fire({
       title: isCorrect ? "Correct!" : "Incorrect",
@@ -97,7 +103,7 @@ const Quiz: React.FC<QuizProps> = ({
       confirmButtonText: "Continue",
     }).then(() => {
       if (isCorrect) {
-        setScore(score + points);
+        setScore((prevScore) => prevScore + points);
         setCorrectAnswers(correctAnswers + 1);
       }
 
@@ -106,7 +112,7 @@ const Quiz: React.FC<QuizProps> = ({
         const minutes = Math.floor(elapsedTime / 60);
         const seconds = elapsedTime % 60;
         const timeString = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-        onComplete(score + points, timeString);
+        onComplete(score + (isCorrect ? points : 0), timeString, [...answerResults, newAnswerResult]);
         setIsCompleted(true);
       } else {
         setCurrentQuestion(nextQuestion);
@@ -126,7 +132,7 @@ const Quiz: React.FC<QuizProps> = ({
       confirmButtonText: isBackToHome ? "Yes, go home" : "Yes, quit",
     }).then((result) => {
       if (result.isConfirmed) {
-        onQuit(elapsedTime, score, currentQuestion);
+        onQuit(elapsedTime, score, currentQuestion, answerResults);
         navigate("/");
       }
     });
@@ -150,7 +156,12 @@ const Quiz: React.FC<QuizProps> = ({
       setButtonsEnabled(true);
       setIsCompleted(false);
       setAnswerResults([]);
-      setStartTime(Date.now());
+      if (timerId) clearInterval(timerId);
+      const newTimerId = setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
+      setTimerId(newTimerId);
+      onQuit(0, 0, 0, []); // Reset progress in Firestore
     }
   };
 

@@ -15,6 +15,13 @@ export interface UserProgress {
     completed: number;
     time: string | null;
     elapsed: number;
+    score: number;
+    answerResults: {
+      question: string;
+      userAnswer: string;
+      correctAnswer: string;
+      isCorrect: boolean;
+    }[];
   };
 }
 
@@ -22,5 +29,5 @@ export interface HighScore {
   name: string;
   score: number;
   topic: string;
-  completed: number; // Added to track completed questions per topic
+  completed: number;
 }

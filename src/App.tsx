@@ -28,8 +28,6 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTopic, setCurrentTopic] = useState<string | null>(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [score, setScore] = useState(0);
   const [userProgress, setUserProgress] = useState<UserProgress>({});
   const [highScores, setHighScores] = useState<(HighScore & { userId: string })[]>([]);
   const [streak, setStreak] = useState(0);
@@ -228,12 +226,8 @@ const App: React.FC = () => {
     const topicFromUrl = pathParts[2];
     if (pathParts[1] === "quiz" && topicFromUrl && topics.some(t => t.name === topicFromUrl)) {
       setCurrentTopic(topicFromUrl);
-      setScore(0);
-      setElapsedTime(0);
     } else if (pathParts[1] !== "quiz") {
       setCurrentTopic(null);
-      setScore(0);
-      setElapsedTime(0);
     }
   }, [location.pathname]);
 
@@ -253,7 +247,7 @@ const App: React.FC = () => {
     updateStreak();
   }, [user, loading, loadUserData, loadHighScores, loadAchievements, updateStreak, checkAchievements]);
 
-  const handleQuizComplete = useCallback(async (newScore: number, time: string) => {
+  const handleQuizComplete = useCallback(async (newScore: number, time: string, answerResults: { question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }[]) => {
     if (!user || !currentTopic || !auth.currentUser) return;
     const updatedProgress = {
       ...userProgress,
@@ -261,6 +255,8 @@ const App: React.FC = () => {
         completed: topics.find((t) => t.name === currentTopic)!.questions.length,
         time,
         elapsed: 0,
+        score: newScore,
+        answerResults,
       },
     };
     try {
@@ -281,7 +277,7 @@ const App: React.FC = () => {
     }
   }, [user, currentTopic, userProgress, loadUserData, loadHighScores, checkAchievements]);
 
-  const handleQuizQuit = useCallback(async (newElapsed: number, newScore: number, newCompleted: number) => {
+  const handleQuizQuit = useCallback(async (newElapsed: number, newScore: number, newCompleted: number, answerResults: { question: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }[]) => {
     if (!user || !currentTopic || !auth.currentUser) return;
     const updatedProgress = {
       ...userProgress,
@@ -289,6 +285,8 @@ const App: React.FC = () => {
         completed: newCompleted,
         time: null,
         elapsed: newElapsed,
+        score: newScore,
+        answerResults,
       },
     };
     try {
@@ -304,8 +302,6 @@ const App: React.FC = () => {
       await loadUserData();
       await loadHighScores();
       setCurrentTopic(null);
-      setElapsedTime(0);
-      setScore(0);
       await checkAchievements();
     } catch (error) {
       console.error("Error in handleQuizQuit:", error);
@@ -326,8 +322,6 @@ const App: React.FC = () => {
       }
       setUserProgress({});
       setCurrentTopic(null);
-      setElapsedTime(0);
-      setScore(0);
       await loadHighScores();
       await checkAchievements();
     } catch (error) {
@@ -338,6 +332,7 @@ const App: React.FC = () => {
   const currentTopicData = currentTopic ? topics.find((t) => t.name === currentTopic) : null;
   const initialProgress = currentTopic ? userProgress[currentTopic]?.completed || 0 : 0;
   const initialElapsed = currentTopic ? userProgress[currentTopic]?.elapsed || 0 : 0;
+  const initialScore = currentTopic ? userProgress[currentTopic]?.score || 0 : 0;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -388,12 +383,12 @@ const App: React.FC = () => {
                     onComplete={handleQuizComplete}
                     initialProgress={initialProgress}
                     initialElapsed={initialElapsed}
-                    initialScore={score}
+                    initialScore={initialScore}
                     onQuit={handleQuizQuit}
-                    elapsedTime={elapsedTime}
-                    setElapsedTime={setElapsedTime}
-                    score={score}
-                    setScore={setScore}
+                    elapsedTime={initialElapsed}
+                    setElapsedTime={() => {}} // No-op to prevent App.tsx interference
+                    score={initialScore}
+                    setScore={() => {}} // No-op to manage locally
                     currentQuestion={initialProgress}
                     setCurrentQuestion={() => {}}
                     userProgress={userProgress}
