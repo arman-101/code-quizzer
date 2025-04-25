@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 mt-auto" // mt-auto ensures it sticks to the bottom
+      className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 mt-auto"
     >
       <div className="max-w-6xl mx-auto text-center">
         <p className="text-lg font-semibold">

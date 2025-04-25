@@ -24,7 +24,7 @@ const SignIn: React.FC = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      navigate("/"); // Rely on App.tsx to enforce
+      navigate("/");
     } catch (error) {
       toast.error("Failed to sign in. Check your credentials.");
     }
@@ -41,7 +41,7 @@ const SignIn: React.FC = () => {
         timer: 2000,
         showConfirmButton: false,
       });
-      navigate("/"); // Rely on App.tsx to enforce
+      navigate("/");
     } catch (error) {
       toast.error("Failed to sign in with Google.");
     }
@@ -51,7 +51,7 @@ const SignIn: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-start justify-center p-4 bg-gradient-to-br from-purple-400 to-indigo-600 min-h-[calc(100vh-64px)]" // Added min-h-[calc(100vh-64px)]
+      className="flex items-start justify-center p-4 bg-gradient-to-br from-purple-400 to-indigo-600 min-h-[calc(100vh-64px)]"
     >
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mt-8">
         <Toaster />

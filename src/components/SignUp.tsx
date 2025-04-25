@@ -11,7 +11,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showConsent, setShowConsent] = useState(true);
-  const [showDenyPopup, setShowDenyPopup] = useState(false); // New state for denial popup
+  const [showDenyPopup, setShowDenyPopup] = useState(false);
   const { signUpWithEmail, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -50,18 +50,18 @@ const SignUp: React.FC = () => {
   };
 
   const handleAgree = () => {
-    setShowConsent(false); // Show signup form
-    setShowDenyPopup(false); // Ensure deny popup is closed
+    setShowConsent(false); 
+    setShowDenyPopup(false); 
   };
 
   const handleDisagree = () => {
-    setShowConsent(false); // Close consent popup
-    setShowDenyPopup(true); // Show denial popup
+    setShowConsent(false); 
+    setShowDenyPopup(true);
   };
 
   const handleReturnToConsent = () => {
-    setShowDenyPopup(false); // Close denial popup
-    setShowConsent(true); // Show consent popup again
+    setShowDenyPopup(false); 
+    setShowConsent(true); 
   };
 
   return (

@@ -26,7 +26,6 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Calculate total score by userId
   const totalScore = highScores
     .filter((score) => user && score.userId === user.uid)
     .reduce((sum, score) => sum + score.score, 0);

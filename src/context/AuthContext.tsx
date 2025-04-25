@@ -57,10 +57,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    setLoading(true); // Set loading to true to block effects
+    setLoading(true); 
     await signOut(auth);
     setUser(null);
-    setLoading(false); // Reset after logout completes
+    setLoading(false);
   };
 
   return (

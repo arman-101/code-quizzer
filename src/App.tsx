@@ -386,9 +386,9 @@ const App: React.FC = () => {
                     initialScore={initialScore}
                     onQuit={handleQuizQuit}
                     elapsedTime={initialElapsed}
-                    setElapsedTime={() => {}} // No-op to prevent App.tsx interference
+                    setElapsedTime={() => {}} 
                     score={initialScore}
-                    setScore={() => {}} // No-op to manage locally
+                    setScore={() => {}}
                     currentQuestion={initialProgress}
                     setCurrentQuestion={() => {}}
                     userProgress={userProgress}

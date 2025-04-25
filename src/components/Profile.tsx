@@ -7,7 +7,6 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase
 import { updateProfile } from "firebase/auth";
 import Swal from "sweetalert2";
 
-// Import new icons
 import Icon1 from "../assets/icons/1cat.png";
 import Icon2 from "../assets/icons/2panda.png";
 import Icon3 from "../assets/icons/3bear.png";
@@ -19,7 +18,7 @@ import Icon8 from "../assets/icons/8dog.png";
 import Icon9 from "../assets/icons/9gorilla.png";
 
 interface ProfileProps {
-  handleResetAll: () => Promise<void>; // Added prop
+  handleResetAll: () => Promise<void>; 
 }
 
 const Profile: React.FC<ProfileProps> = ({ handleResetAll }) => {

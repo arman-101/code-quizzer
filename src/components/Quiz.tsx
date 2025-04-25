@@ -161,7 +161,7 @@ const Quiz: React.FC<QuizProps> = ({
         setElapsedTime((prev) => prev + 1);
       }, 1000);
       setTimerId(newTimerId);
-      onQuit(0, 0, 0, []); // Reset progress in Firestore
+      onQuit(0, 0, 0, []);
     }
   };
 

@@ -6,7 +6,6 @@ import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Swal from "sweetalert2";
 
-// Import new icons
 import Icon1 from "../assets/icons/1cat.png";
 import Icon2 from "../assets/icons/2panda.png";
 import Icon3 from "../assets/icons/3bear.png";
@@ -136,7 +135,7 @@ const Header: React.FC = () => {
                 <img
                   src={iconOptions.find((opt) => opt.value === selectedIcon)?.src}
                   alt="User Icon"
-                  className="w-7 h-7 mr-2" // 1.5x original ~27px
+                  className="w-7 h-7 mr-2"
                 />
               )}
               <span className="text-lg font-medium">
