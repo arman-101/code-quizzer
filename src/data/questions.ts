@@ -10,7 +10,7 @@ export const topics: Topic[] = [
       { question: "Which is a valid variable name?", options: ["1var", "var_1", "var-1", "var 1"], correct: "var_1", difficulty: 10 },
       { question: "What type is 'Hello'?", options: ["int", "float", "string", "bool"], correct: "string", difficulty: 10 },
       { question: "Can variable names start with numbers?", options: ["Yes", "No", "Sometimes", "Only in loops"], correct: "No", difficulty: 10 },
-      { question: "What keyword declares a constant in JavaScript?", options: ["var", "let", "const", "None"], correct: "const", difficulty: 10 }, // Adjusted from Python
+      { question: "What keyword declares a constant in JavaScript?", options: ["var", "let", "const", "None"], correct: "const", difficulty: 10 }, 
       { question: "Which is NOT a valid variable type?", options: ["integer", "boolean", "character", "loop"], correct: "loop", difficulty: 10 },
       { question: "What does x = x + 1 do?", options: ["Error", "Increments x", "Decrements x", "Nothing"], correct: "Increments x", difficulty: 10 },
       { question: "What's the scope of a local variable?", options: ["Global", "Function only", "File", "Program"], correct: "Function only", difficulty: 10 },
@@ -21,7 +21,7 @@ export const topics: Topic[] = [
       { question: "Which variable name is invalid?", options: ["my_var", "_var", "var#", "var1"], correct: "var#", difficulty: 20 },
       { question: "What does x = 5.5 do?", options: ["Assigns an int", "Assigns a float", "Assigns a string", "Error"], correct: "Assigns a float", difficulty: 20 },
       { question: "Can you reassign a variable?", options: ["Yes", "No", "Only strings", "Only numbers"], correct: "Yes", difficulty: 20 },
-      { question: "What’s the default value of an uninitialized variable in JavaScript?", options: ["0", "null", "undefined", "Empty"], correct: "undefined", difficulty: 20 }, // Adjusted from Python
+      { question: "What’s the default value of an uninitialized variable in JavaScript?", options: ["0", "null", "undefined", "Empty"], correct: "undefined", difficulty: 20 }, 
       { question: "What does x -= 2 do?", options: ["Add 2", "Subtract 2", "Multiply by 2", "Divide by 2"], correct: "Subtract 2", difficulty: 20 },
       { question: "Which is a global variable?", options: ["Inside function", "Outside function", "In a loop", "In a class"], correct: "Outside function", difficulty: 20 },
       { question: "What keyword makes a variable global in Python?", options: ["global", "local", "static", "const"], correct: "global", difficulty: 20 },
@@ -29,7 +29,7 @@ export const topics: Topic[] = [
       // Hard (21-30, 30 points)
       { question: "What’s the type of 3.14 after int()?", options: ["int", "float", "string", "bool"], correct: "int", difficulty: 30 },
       { question: "How do you declare multiple variables at once?", options: ["x = y = 5", "x, y = 5", "x = 5, y = 5", "x y = 5"], correct: "x = y = 5", difficulty: 30 },
-      { question: "What’s the result of x = '5' + 3 in JavaScript?", options: ["8", "53", "Error", "15"], correct: "53", difficulty: 30 }, // Adjusted from Python
+      { question: "What’s the result of x = '5' + 3 in JavaScript?", options: ["8", "53", "Error", "15"], correct: "53", difficulty: 30 }, 
       { question: "What does x //= 2 do in Python?", options: ["Floor divide by 2", "Multiply by 2", "Add 2", "Subtract 2"], correct: "Floor divide by 2", difficulty: 30 },
       { question: "What’s the scope of a variable in a function without 'global'?", options: ["Global", "Local", "File", "Program"], correct: "Local", difficulty: 30 },
       { question: "What happens if you use a variable before defining it in Python?", options: ["0", "None", "Error", "Random"], correct: "Error", difficulty: 30 },
@@ -67,7 +67,7 @@ export const topics: Topic[] = [
       // Hard (21-30, 30 points)
       { question: "What's loop unrolling?", options: ["Expanding loops", "Ending loops", "Starting loops", "Breaking loops"], correct: "Expanding loops", difficulty: 30 },
       { question: "What's a common loop optimization?", options: ["More loops", "Fewer iterations", "More variables", "Less code"], correct: "Fewer iterations", difficulty: 30 },
-      { question: "What’s the step in range(0, 10, -1)?", options: ["1", "-1", "0", "Error"], correct: "-1", difficulty: 30 }, // Corrected from Error
+      { question: "What’s the step in range(0, 10, -1)?", options: ["1", "-1", "0", "Error"], correct: "-1", difficulty: 30 }, 
       { question: "What does 'for i in range(5, 2, -1):' loop over?", options: ["5,4,3", "5,4,3,2", "2,3,4,5", "Error"], correct: "5,4,3", difficulty: 30 },
       { question: "What’s the condition to exit a 'do-while' in Python?", options: ["While false", "While true", "No do-while", "Break"], correct: "No do-while", difficulty: 30 },
       { question: "How many times does 'while x < 5: x += 2' loop if x=0?", options: ["2", "3", "4", "5"], correct: "3", difficulty: 30 },
